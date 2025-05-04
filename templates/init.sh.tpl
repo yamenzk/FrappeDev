@@ -196,36 +196,33 @@ fi
 
 
 PROCFILE_PATH="${BENCH_PATH}/Procfile"
-NVM_LOAD_COMMAND="source /home/frappe/.nvm/nvm.sh && nvm use default > /dev/null && "
+NVM_LOAD_COMMAND=". /home/frappe/.nvm/nvm.sh && nvm use default > /dev/null && "
 
 if [ -f "$PROCFILE_PATH" ]; then
-    echo -e "${Blue}[INIT] Patching Procfile (${PROCFILE_PATH}) for NVM compatibility...${Color_Off}"
-    # Add NVM sourcing to lines starting with 'node' or specific service names
-    # Use a temporary file to avoid issues with sed in-place editing complexities
+    echo -e "\033[0;34m[INIT] Patching Procfile (${PROCFILE_PATH}) to source NVM before executing node...\033[0m"
+
     tmp_procfile=$(mktemp)
-    # Add check if sed command succeeds
-    if grep -qE '^(node|socketio|watch):' "$PROCFILE_PATH" && \
-       sed "s|^\(socketio: \)\(node .*\)$|\1${NVM_LOAD_COMMAND}\2|g; s|^\(watch: \)\(node .*\)$|\1${NVM_LOAD_COMMAND}\2|g; s|^\(node .*\)$|${NVM_LOAD_COMMAND}\1|g" "$PROCFILE_PATH" > "$tmp_procfile"; then
-        # Check if the temp file was actually created and populated
-        if [ -s "$tmp_procfile" ]; then
-            mv "$tmp_procfile" "$PROCFILE_PATH"; check_init_command "patch Procfile"
-            echo -e "${Green}[INIT] Procfile patched successfully.${Color_Off}"
+
+    NVM_LOAD_COMMAND_ESCAPED=$(echo "$NVM_LOAD_COMMAND" | sed 's/\//\\\//g; s/\&/\\\&/g') # Escape / and &
+    if sed -E -e 's!^(socketio:|watch:)(\s*)(node\s+.*)! \1\2'"${NVM_LOAD_COMMAND_ESCAPED}"'\3!g' "$PROCFILE_PATH" > "$tmp_procfile"; then
+        if [ -s "$tmp_procfile" ] && ! cmp -s "$PROCFILE_PATH" "$tmp_procfile"; then
+             mv "$tmp_procfile" "$PROCFILE_PATH"; check_init_command "patch Procfile to source NVM"
+             echo -e "\033[0;32m[INIT] Procfile patched successfully to source NVM.\033[0m"
+        elif cmp -s "$PROCFILE_PATH" "$tmp_procfile"; then
+             echo -e "\033[0;33m[INIT] Procfile already seems patched or no changes needed.\033[0m"
+             rm -f "$tmp_procfile" # Clean up unchanged temp file
         else
-            echo -e "${Red}[INIT ERROR] Failed to create patched Procfile content. Aborting.${Color_Off}"
-            rm -f "$tmp_procfile" # Clean up temp file
+            echo -e "\033[0;31m[INIT ERROR] Failed to create patched Procfile content (sed output empty?). Aborting.\033[0m"
+            rm -f "$tmp_procfile"
             exit 1
         fi
     elif [ $? -ne 0 ]; then
-         # Handle cases where sed might fail
-        echo -e "${Red}[INIT ERROR] Failed execute sed command for patching Procfile. Aborting.${Color_Off}"
-        rm -f "$tmp_procfile" # Clean up temp file
+        echo -e "\033[0;31m[INIT ERROR] Failed execute sed command for patching Procfile. Aborting.\033[0m"
+        rm -f "$tmp_procfile"
         exit 1
-    else
-         echo -e "${Yellow}[INIT WARN] No lines requiring NVM patching found in Procfile.${Color_Off}"
-         rm -f "$tmp_procfile" # Clean up temp file
     fi
 else
-    echo -e "${Yellow}[INIT WARN] Procfile not found at ${PROCFILE_PATH}. Skipping patch.${Color_Off}"
+    echo -e "\033[0;33m[INIT WARN] Procfile not found at ${PROCFILE_PATH}. Skipping patch.\033[0m"
 fi
 
 

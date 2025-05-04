@@ -60,13 +60,14 @@ services:
       - CHOKIDAR_USEPOLLING=true # Helps file watching in Docker
       - FRAPPE_SITE_NAME_HEADER=X-Frappe-Site-Name # Support for multi-tenant headers if needed
     volumes:
-      - ./scripts:/workspace/scripts:ro # Mount initialization scripts read-only
-      - ./frappe-bench:/workspace/frappe-bench # Mount bench code for development
-      - ~/.ssh:/home/frappe/.ssh:ro # Optional: Mount host SSH keys read-only for Git access
+      - ./scripts:/workspace/scripts:ro 
+      - ./frappe-bench:/workspace/frappe-bench 
+      - ~/.ssh:/home/frappe/.ssh:ro # Optional host SSH mount
+      - nvm-data:/home/frappe/.nvm
     working_dir: /workspace/frappe-bench # Default dir when entering container via shell/exec
     ports:
-      - "8000-8005:8000-8005" # Frappe HTTP development ports range
-      - "9000-9005:9000-9005" # SocketIO development ports range
+      - "8000-8005:8000-8005"
+      - "9000-9005:9000-9005"
       - "8080:8080"
     depends_on:
       mariadb:
@@ -80,3 +81,4 @@ services:
 
 volumes:
   mariadb-data: {} # Persist MariaDB data
+  nvm-data: {}
