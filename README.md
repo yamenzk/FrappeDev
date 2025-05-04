@@ -1,7 +1,7 @@
 # FrappeDev - Quick Frappe Docker Development Setup
 
 *This script streamlines the process of setting up isolated Frappe framework development instances using Docker.*
-__🤖 Disclaimer: This README, along with portions of the scripts and configuration files in this repository, were generated with AI__
+* __🤖 Disclaimer: This README, along with portions of the scripts and configuration files in this repository, were generated with AI__
 
 ## 📑 Table of Contents
 
