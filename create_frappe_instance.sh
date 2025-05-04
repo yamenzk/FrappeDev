@@ -1,136 +1,132 @@
 #!/bin/bash
 # create_frappe_instance.sh
 
-
 # --- Configuration ---
-DEFAULT_BRANCH="version-15"
-DEFAULT_SITE_ON_INIT="dev.localhost" 
-
-# --- Determine script's own directory ---
+DEFAULT_BRANCH="version-15" # Default Frappe branch
+DEFAULT_SITE_ON_INIT="dev.localhost" # Default site name created by init.sh
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="${SCRIPT_DIR}/lib"
 TEMPLATE_DIR="${SCRIPT_DIR}/templates"
 
 # --- Source Libraries ---
-source "${LIB_DIR}/helpers.sh" 
+source "${LIB_DIR}/helpers.sh"
 source "${LIB_DIR}/docker_utils.sh"
 source "${LIB_DIR}/docker_check.sh"
 source "${LIB_DIR}/input.sh"
 
 
 # --- Script Start ---
-echo -e "${Bold_Blue}===========================================${Color_Off}"
-echo -e "${Bold_Blue} Frappe Development Instance Creator      ${Color_Off}"
-echo -e "${Bold_Blue}===========================================${Color_Off}"
+echo -e "${Bold_Blue}===========================================${Color_Off}" >&2 
+echo -e "${Bold_Blue} Frappe Development Instance Creator      ${Color_Off}" >&2
+echo -e "${Bold_Blue}===========================================${Color_Off}" >&2
 
 # --- Prerequisites Check ---
-check_prerequisites
+check_prerequisites 
 
 # --- Get Instance Name and Branch ---
 set +e
-read -r INSTANCE_NAME BRANCH <<< "$(process_input "$DEFAULT_BRANCH" "$@")"
-set -e
+CAPTURED_OUTPUT="$(process_input "$DEFAULT_BRANCH" "$@")"
+PROCESS_INPUT_EXIT_CODE=$?
+if [ $PROCESS_INPUT_EXIT_CODE -ne 0 ]; then
+    error "Input processing failed." #
+    exit $PROCESS_INPUT_EXIT_CODE
+fi
+
+INSTANCE_NAME=$(echo "$CAPTURED_OUTPUT" | sed -n '1p')
+BRANCH=$(echo "$CAPTURED_OUTPUT" | sed -n '2p')
+
+set -e # Re-enable exit on error
 
 # --- Final Validation ---
 validate_input "$INSTANCE_NAME" "$BRANCH"
 
 # --- Directory Setup ---
-step 2 "Setting up Instance Directory"
-PROJECT_ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)" 
+step 2 "Setting up Instance Directory" 
+PROJECT_ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 INSTANCE_DIR="${PROJECT_ROOT_DIR}/${INSTANCE_NAME}"
-info "Target directory: $INSTANCE_DIR"
+info "Target directory: $INSTANCE_DIR" 
 
 if [ -d "$INSTANCE_DIR" ]; then
     warning "Instance directory '$INSTANCE_DIR' already exists."
     warning "Continuing may overwrite existing configuration files (docker-compose.yml, scripts, helper)."
-    read -p "Do you want to continue? (y/n): " -n 1 -r
+    read -p "Do you want to continue? (y/n): " -n 1 -r REPLY
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        info "Operation cancelled by user."
+        info "Operation cancelled by user." 
         exit 1
     fi
-    info "Proceeding with existing directory."
+    info "Proceeding with existing directory." 
 else
-    info "Creating instance directory: $INSTANCE_DIR"
+    info "Creating instance directory: $INSTANCE_DIR" 
     mkdir -p "$INSTANCE_DIR"; check_command "create instance directory '$INSTANCE_DIR'" "$DOCKER_COMPOSE_CMD"
 fi
 
 # --- Generate Configuration Files ---
-step 3 "Generating Configuration Files"
+step 3 "Generating Configuration Files" 
 
-# Change to instance directory to make file paths simpler
 cd "$INSTANCE_DIR"; check_command "change directory to '$INSTANCE_DIR'" "$DOCKER_COMPOSE_CMD"
-info "Changed working directory to $PWD"
+info "Changed working directory to $PWD" 
 
 # 1. Generate docker-compose.yml
-info "Generating docker-compose.yml..."
+info "Generating docker-compose.yml..." 
 cp "${TEMPLATE_DIR}/docker-compose.yml.tpl" ./docker-compose.yml; check_command "copy docker-compose template" "$DOCKER_COMPOSE_CMD"
-success "docker-compose.yml generated."
+success "docker-compose.yml generated." 
 
 # 2. Generate scripts/init.sh
-info "Generating scripts/init.sh..."
+info "Generating scripts/init.sh..." 
 mkdir -p scripts; check_command "create scripts directory" "$DOCKER_COMPOSE_CMD"
 INIT_SCRIPT_PATH="scripts/init.sh"
 cp "${TEMPLATE_DIR}/init.sh.tpl" "$INIT_SCRIPT_PATH"; check_command "copy init.sh template" "$DOCKER_COMPOSE_CMD"
 
-# Replace placeholders in the init script using sed (use a different delimiter like '|' to avoid issues with paths/URLs)
 sed -i.bak "s|__BRANCH_PLACEHOLDER__|$BRANCH|g" "$INIT_SCRIPT_PATH"; check_command "set branch in init.sh" "$DOCKER_COMPOSE_CMD"
 sed -i.bak "s|__DEFAULT_SITE_PLACEHOLDER__|$DEFAULT_SITE_ON_INIT|g" "$INIT_SCRIPT_PATH"; check_command "set default site in init.sh" "$DOCKER_COMPOSE_CMD"
-rm -f "${INIT_SCRIPT_PATH}.bak" # Remove sed backup file
-info "Set Frappe branch to '$BRANCH' and initial site to '$DEFAULT_SITE_ON_INIT' in init script."
+rm -f "${INIT_SCRIPT_PATH}.bak"
+info "Set Frappe branch to '$BRANCH' and initial site to '$DEFAULT_SITE_ON_INIT' in init script." 
 
-# Make the init script executable
 chmod +x "$INIT_SCRIPT_PATH"; check_command "make init.sh executable" "$DOCKER_COMPOSE_CMD"
-success "scripts/init.sh generated and made executable."
+success "scripts/init.sh generated and made executable." 
 
 # 3. Generate frappe_helper.sh
-info "Generating frappe_helper.sh..."
+info "Generating frappe_helper.sh..." 
 HELPER_SCRIPT_PATH="frappe_helper.sh"
 cp "${TEMPLATE_DIR}/frappe_helper.sh.tpl" "$HELPER_SCRIPT_PATH"; check_command "copy frappe_helper.sh template" "$DOCKER_COMPOSE_CMD"
 
-# Replace instance name placeholder
 sed -i.bak "s|__INSTANCE_NAME_PLACEHOLDER__|$INSTANCE_NAME|g" "$HELPER_SCRIPT_PATH"; check_command "set instance name in helper script" "$DOCKER_COMPOSE_CMD"
-rm -f "${HELPER_SCRIPT_PATH}.bak" # Remove sed backup file
+rm -f "${HELPER_SCRIPT_PATH}.bak"
 
-# Make the helper script executable
 chmod +x "$HELPER_SCRIPT_PATH"; check_command "make frappe_helper.sh executable" "$DOCKER_COMPOSE_CMD"
-success "frappe_helper.sh generated and made executable."
-
+success "frappe_helper.sh generated and made executable." 
 
 # --- Start Services ---
-step 4 "Starting Docker Containers"
-info "Running '$DOCKER_COMPOSE_CMD pull' to ensure images are up-to-date..."
-$DOCKER_COMPOSE_CMD pull || warning "Could not pull images. Proceeding with local images if they exist." # Allow script to continue if offline
-info "Running '$DOCKER_COMPOSE_CMD up -d --remove-orphans'..."
+step 4 "Starting Docker Containers" 
+info "Running '$DOCKER_COMPOSE_CMD pull' to ensure images are up-to-date..." 
+$DOCKER_COMPOSE_CMD pull || warning "Could not pull images. Proceeding with local images if they exist."
+info "Running '$DOCKER_COMPOSE_CMD up -d --remove-orphans'..." 
 $DOCKER_COMPOSE_CMD up -d --remove-orphans; check_command "start Docker containers" "$DOCKER_COMPOSE_CMD"
-success "Docker containers started in detached mode."
-
+success "Docker containers started in detached mode." 
 
 # --- Install Tools & Initialize Frappe Instance ---
-step 5 "Installing Tools & Initializing Frappe Instance"
-info "Waiting a few seconds for containers to stabilize..."
-sleep 7 
+step 5 "Installing Tools & Initializing Frappe Instance" 
+info "Waiting a few seconds for containers to stabilize..." 
+sleep 7
 
-info "Installing required tools inside container (as root)..."
+info "Installing required tools inside container (as root)..." 
 APT_CMD="export DEBIAN_FRONTEND=noninteractive && apt-get update -qq >/dev/null && apt-get install -y -qq --no-install-recommends netcat-openbsd mariadb-client redis-tools apt-utils > /dev/null"
 $DOCKER_COMPOSE_CMD exec -T -u root frappe bash -c "$APT_CMD"
 check_command "install required tools (nc, mysqladmin, redis-cli, apt-utils) in container" "$DOCKER_COMPOSE_CMD"
-success "Required tools installed/verified in container."
+success "Required tools installed/verified in container." 
 
-# Set ownership of the potentially host-mounted volume inside the container
-info "Setting ownership of /workspace/frappe-bench inside container (as root)..."
+info "Setting ownership of /workspace/frappe-bench inside container (as root)..." 
 $DOCKER_COMPOSE_CMD exec -T -u root frappe chown -R 1000:1000 /workspace/frappe-bench
 check_command "set ownership of /workspace/frappe-bench" "$DOCKER_COMPOSE_CMD"
-success "Ownership set for /workspace/frappe-bench."
+success "Ownership set for /workspace/frappe-bench." 
 
-# Run the initialization script
-info "Running initialization script inside container (scripts/init.sh as user frappe)..."
-info "This process involves downloading packages and setting up the bench/site."
-info "${Yellow}This might take several minutes depending on your system and internet connection.${Color_Off}"
+info "Running initialization script inside container (scripts/init.sh as user frappe)..." 
+info "This process involves downloading packages and setting up the bench/site." 
+info "${Yellow}This might take several minutes depending on your system and internet connection.${Color_Off}" 
 $DOCKER_COMPOSE_CMD exec -T -u frappe frappe bash /workspace/scripts/init.sh
 check_command "execute initialization script (scripts/init.sh)" "$DOCKER_COMPOSE_CMD"
-success "Initialization script completed successfully."
-
+success "Initialization script completed successfully." 
 
 # --- Final Summary ---
 step 6 "Setup Complete!"
