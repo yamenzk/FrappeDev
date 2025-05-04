@@ -86,16 +86,16 @@ info "Set Frappe branch to '$BRANCH' and initial site to '$DEFAULT_SITE_ON_INIT'
 chmod +x "$INIT_SCRIPT_PATH"; check_command "make init.sh executable" "$DOCKER_COMPOSE_CMD"
 success "scripts/init.sh generated and made executable." 
 
-# 3. Generate frappe_helper.sh
-info "Generating frappe_helper.sh..." 
-HELPER_SCRIPT_PATH="frappe_helper.sh"
-cp "${TEMPLATE_DIR}/frappe_helper.sh.tpl" "$HELPER_SCRIPT_PATH"; check_command "copy frappe_helper.sh template" "$DOCKER_COMPOSE_CMD"
+# 3. Generate fh.sh
+info "Generating fh.sh..." 
+HELPER_SCRIPT_PATH="fh.sh"
+cp "${TEMPLATE_DIR}/fh.sh.tpl" "$HELPER_SCRIPT_PATH"; check_command "copy fh.sh template" "$DOCKER_COMPOSE_CMD"
 
 sed -i.bak "s|__INSTANCE_NAME_PLACEHOLDER__|$INSTANCE_NAME|g" "$HELPER_SCRIPT_PATH"; check_command "set instance name in helper script" "$DOCKER_COMPOSE_CMD"
 rm -f "${HELPER_SCRIPT_PATH}.bak"
 
-chmod +x "$HELPER_SCRIPT_PATH"; check_command "make frappe_helper.sh executable" "$DOCKER_COMPOSE_CMD"
-success "frappe_helper.sh generated and made executable." 
+chmod +x "$HELPER_SCRIPT_PATH"; check_command "make fh.sh executable" "$DOCKER_COMPOSE_CMD"
+success "fh.sh generated and made executable." 
 
 # --- Start Services ---
 step 4 "Starting Docker Containers" 
@@ -138,8 +138,8 @@ ${Bold_Green}Frappe instance '$INSTANCE_NAME' (Branch: $BRANCH) is ready!${Color
   ${Green}Username:${Color_Off}     Administrator
   ${Green}Password:${Color_Off}     admin (for '$DEFAULT_SITE_ON_INIT')
 ------------------------------------------------------
-Use the helper script in '$INSTANCE_DIR': ${Bold_Green}./frappe_helper.sh${Color_Off}
-  Run ${Bold_Green}./frappe_helper.sh${Color_Off} without arguments to see available commands.
+Use the helper script in '$INSTANCE_DIR': ${Bold_Green}./fh.sh${Color_Off}
+  Run ${Bold_Green}./fh.sh${Color_Off} without arguments to see available commands.
 ======================================================
 ${Yellow}Note:${Color_Off} Accessing specific *.localhost sites (e.g., site1.localhost)
       requires adding entries to your system's hosts file:

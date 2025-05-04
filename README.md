@@ -11,7 +11,7 @@
 - [💻 Start Guide: Local Development](#-start-guide-local-development)
 - [☁️ Start Guide: GitHub Codespaces](#️-start-guide-github-codespaces)
 - [🐚 Working with the Container Shell](#-working-with-the-container-shell)
-- [⚙️ Using frappe_helper.sh](#️-using-frappe_helpersh)
+- [⚙️ Using fh.sh](#️-using-fhsh)
 - [🌐 Accessing Your Frappe Instance](#-accessing-your-frappe-instance)
 - [📁 Directory Structure](#-directory-structure)
 - [💡 Advanced Topics](#-advanced-topics)
@@ -25,7 +25,7 @@ FrappeDev provides a simplified approach to creating containerized Frappe develo
 * **Fully Dockerized:** Runs Frappe and dependencies (MariaDB, Redis) in isolated containers
 * **GitHub Codespaces Ready:** Seamless cloud development experience with pre-configured environment
 * **Version Flexibility:** Choose any Frappe branch (Currently Supports: `version-15`, `develop`)
-* **Powerful Helper Script:** Manage your instance with the included `frappe_helper.sh` 
+* **Powerful Helper Script:** Manage your instance with the included `fh.sh` 
 * **Multiple Environments:** Create and manage separate Frappe instances easily
 * **SSH Key Management:** Use host keys or generate new ones for Git operations
 
@@ -71,7 +71,7 @@ FrappeDev provides a simplified approach to creating containerized Frappe develo
 
 5. **Start Development Server**
    ```bash
-   ./frappe_helper.sh dev
+   ./fh.sh dev
    ```
 
 6. **Access Frappe**
@@ -101,7 +101,7 @@ FrappeDev provides a simplified approach to creating containerized Frappe develo
 
 5. **Start Development Server**
    ```bash
-   ./frappe_helper.sh dev
+   ./fh.sh dev
    ```
 
 6. **Access Frappe**
@@ -114,7 +114,7 @@ FrappeDev provides a simplified approach to creating containerized Frappe develo
 To run bench commands directly, you need to access the container's shell environment:
 
 ```bash
-./frappe_helper.sh shell
+./fh.sh shell
 ```
 
 This command gives you a shell prompt inside the Frappe container where you can run bench commands directly (`bench --help`)
@@ -122,12 +122,12 @@ This command gives you a shell prompt inside the Frappe container where you can 
 
 **Note:** When you're done working in the shell, type `exit` to return to your host system's terminal.
 
-## ⚙️ Using `frappe_helper.sh`
+## ⚙️ Using `fh.sh`
 
-The `frappe_helper.sh` script is included in each instance directory and provides all the tools needed to manage that specific Frappe instance.
+The `fh.sh` script is included in each instance directory and provides all the tools needed to manage that specific Frappe instance.
 
 ```bash
-./frappe_helper.sh <command> [options]
+./fh.sh <command> [options]
 ```
 
 **Key Commands:**
@@ -140,7 +140,7 @@ The `frappe_helper.sh` script is included in each instance directory and provide
 | **Utilities** | `setup-ssh`, `exec <cmd>`, `toggle-dev-mode`, `toggle-csrf <site>` |
 | **Multi-site** | `enable-dns-multitenant`, `disable-serve-default-site` |
 
-Run `./frappe_helper.sh` without arguments for the complete command list with descriptions.
+Run `./fh.sh` without arguments for the complete command list with descriptions.
 
 * **Default Site:** Access `http://localhost:8000`
 * **Custom Sites:**
@@ -162,7 +162,7 @@ Default login credentials: `Administrator` / `admin`
 └── my-instance/              # Your Frappe instance
     ├── docker-compose.yml    # Container configuration
     ├── frappe-bench/         # Mounted source code
-    ├── frappe_helper.sh      # Instance management tool
+    ├── fh.sh      # Instance management tool
     └── scripts/
         └── init.sh           # Container initialization script
 ```
@@ -192,7 +192,7 @@ To handle multiple sites in a single Frappe instance:
 
 1. **Create additional sites:**
    ```bash
-   ./frappe_helper.sh new-site mysite.localhost
+   ./fh.sh new-site mysite.localhost
    ```
 
 2. **Configure hostname resolution:**
@@ -200,15 +200,15 @@ To handle multiple sites in a single Frappe instance:
 
 3. **Enable DNS multitenancy:**
    ```bash
-   ./frappe_helper.sh enable-dns-multitenant
+   ./fh.sh enable-dns-multitenant
    ```
 
 4. **Optional: Prevent default site serving:**
    ```bash
-   ./frappe_helper.sh disable-serve-default-site
+   ./fh.sh disable-serve-default-site
    ```
 
 5. **Apply changes:**
    ```bash
-   ./frappe_helper.sh restart
+   ./fh.sh restart
    ```

@@ -227,7 +227,7 @@ fi
 
 
 echo -e "\\n${Bold_Green}--- Frappe Initialization Complete --- ${Color_Off}"
-echo -e "${Blue}To start the development server, run './frappe_helper.sh dev' on the host.${Color_Off}"
+echo -e "${Blue}To start the development server, run './fh.sh dev' on the host.${Color_Off}"
 echo -e "${Blue}Your site '${SITE_NAME}' will be available at: http://localhost:8000${Color_Off}"
 
 exit 0

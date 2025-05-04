@@ -150,7 +150,7 @@ case "$1" in
 
         # --- Check mount status INSIDE the container ---
         # Check involves: 1. Does dir exist? 2. If yes, can we write a temp file?
-        mount_status_cmd="if [ -d /home/frappe/.ssh ]; then if touch /home/frappe/.ssh/.frappe_helper_write_test 2>/dev/null; then rm /home/frappe/.ssh/.frappe_helper_write_test; echo 'writable'; else echo 'readonly'; fi; else echo 'missing'; fi"
+        mount_status_cmd="if [ -d /home/frappe/.ssh ]; then if touch /home/frappe/.ssh/.fh_write_test 2>/dev/null; then rm /home/frappe/.ssh/.fh_write_test; echo 'writable'; else echo 'readonly'; fi; else echo 'missing'; fi"
         # Run the check quietly using exec -T, capture output
         mount_info=$($DOCKER_COMPOSE_CMD exec -T frappe bash -c "$mount_status_cmd")
         mount_check_exit_code=$?
