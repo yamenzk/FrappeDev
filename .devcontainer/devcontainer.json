@@ -19,5 +19,6 @@
       ]
     }
   },
+  "postCreateCommand": "chmod +x ./create_frappe_instance.sh",
   "remoteUser": "codespace"
 }
