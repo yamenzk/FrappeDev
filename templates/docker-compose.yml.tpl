@@ -67,6 +67,7 @@ services:
     ports:
       - "8000-8005:8000-8005" # Frappe HTTP development ports range
       - "9000-9005:9000-9005" # SocketIO development ports range
+      - "8080:8080"
     depends_on:
       mariadb:
         condition: service_healthy
