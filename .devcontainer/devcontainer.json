@@ -1,52 +1,23 @@
 // .devcontainer/devcontainer.json
 {
   "name": "Frappe Dev Instance Codespace",
-
-  // Use a base image that includes common tools.
-  // The 'universal' image includes Docker CLI and is pre-configured for socket mounting.
   "image": "mcr.microsoft.com/vscode/devcontainers/universal:linux",
 
-  // Alternatively, use a simpler base and add the Docker feature:
-  // "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  // "features": {
-  //   // This feature installs Docker CLI and configures access to the host Docker socket
-  //   "ghcr.io/devcontainers/features/docker-in-docker:2": {
-  //        "version": "latest",
-  //        "moby": true // Moby is the open-source upstream for Docker CE
-  //   }
-  // },
-
-
-  // Forward the ports your Frappe instance and helper script use.
-  // Codespaces will map these to publicly accessible URLs.
   "forwardPorts": [
-      8000, // Default Frappe HTTP Port
-      9000, // Default Frappe SocketIO Port
-      // Add other ports if needed, e.g., from docker-compose.yml if you access them directly
-      3307, // MariaDB mapped port
-      13000, // Redis Cache mapped port
-      11000, // Redis Queue mapped port
-      12000 // Redis SocketIO mapped port
+      8000, 9000, 3307, 13000, 11000, 12000
     ],
 
-  // Optional: Add VS Code settings for the Codespace
   "customizations": {
     "vscode": {
       "settings": {
         "terminal.integrated.shell.linux": "/bin/bash"
       },
       "extensions": [
-        "ms-azuretools.vscode-docker", // Docker extension (useful)
-        "ms-python.python",         // If you do Python development
+        "ms-azuretools.vscode-docker",
+        "ms-python.python",
         "visualstudioexptteam.vscodeintellicode"
       ]
     }
   },
-
-  // Optional: Run commands after the Codespace is created
-  // Example: Ensure scripts are executable (though git should preserve this)
-  // "postCreateCommand": "chmod +x ./create_frappe_project/create_frappe_instance.sh",
-
-  // Run as the default non-root user 'vscode'/'codespace'
-  "remoteUser": "vscode" // or "codespace" if using a different base image sometimes
+  "remoteUser": "codespace"
 }
