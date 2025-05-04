@@ -788,6 +788,63 @@ case "$1" in
             success "Instance cleaned. All container data lost."
         else info "Operation cancelled."; fi
         ;;
+    
+    reset-default-site)
+        info "This will attempt to remove the 'default_site' setting from common_site_config.json."
+        warning "The effective default site will then depend on the last site set via 'bench use'."
+        read -p "Are you sure you want to remove the explicit default site setting? (y/n): " -n 1 -r; echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            # Using bench config command to remove the key
+            run_bench config remove-common-config default_site
+            if [ $? -eq 0 ]; then
+                success "Attempted to remove 'default_site' from common config."
+                info "Please restart bench ('$0 dev') for changes to potentially take effect."
+            else
+                # Note: bench config might return non-zero if key doesn't exist, which is okay.
+                # We might need more robust error checking depending on bench version behavior.
+                warning "Bench command finished. The key might have already been absent or an error occurred."
+            fi
+        else info "Operation cancelled."; fi
+        ;;
+
+    enable-dns-multitenant)
+        info "Setting 'dns_multitenant' to 'true' (on) in common_site_config.json..."
+        # Use bench config command
+        run_bench config dns_multitenant on
+        if [ $? -eq 0 ]; then
+            success "'dns_multitenant' set to 'on'."
+            info "Please restart bench ('$0 dev') for changes to take effect."
+        else error "Failed to set 'dns_multitenant'."; fi
+        ;;
+
+    disable-serve-default-site)
+        info "This will set 'serve_default_site' to 'false' (0) in common_site_config.json."
+        warning "This might help ensure hostname matching works correctly with DNS multitenancy."
+        read -p "Are you sure you want to set 'serve_default_site' to false? (y/n): " -n 1 -r; echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            # Use bench set-config -g (like developer_mode) and '0' for false
+            run_bench set-config -g serve_default_site 0
+            if [ $? -eq 0 ]; then
+                success "'serve_default_site' set to '0' (false)."
+                info "Please restart bench ('$0 dev') for changes to take effect."
+            else error "Failed to set 'serve_default_site'."; fi
+        else info "Operation cancelled."; fi
+        ;;
+
+    setup-nginx)
+        info "Running 'bench setup nginx'..."
+        warning "This command regenerates Nginx configuration files."
+        warning "${Bold_Red}This is typically used for PRODUCTION setups using Nginx.${Color_Off}"
+        warning "It might have limited effect or be unnecessary in this Dockerized 'bench start' development environment."
+        read -p "Proceed anyway? (y/n): " -n 1 -r; echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            run_bench setup nginx
+             if [ $? -eq 0 ]; then
+                 success "'bench setup nginx' completed."
+                 info "If Nginx were running as the primary server, you would typically reload it now (e.g., 'sudo systemctl reload nginx')."
+            else error "'bench setup nginx' failed."; fi
+        else info "Operation cancelled."; fi
+        ;;
 
     # --- NEW/MERGED COMMANDS ---
     update)
@@ -908,7 +965,7 @@ case "$1" in
         echo -e "  ${Green}logs${Color_Off}              Follow Frappe container logs"
         echo -e "  ${Green}clean${Color_Off}             Stop/Remove containers and volumes (${Bold_Red}removes DB data${Color_Off})"
         echo
-        echo -e "${Yellow}Bench / Site Management:${Color_Off}"
+        echo -e "${Yellow}Bench / Site / Config Management:${Color_Off}" # Renamed Section Title
         echo -e "  ${Green}shell${Color_Off}             Open a bash shell in the Frappe container"
         echo -e "  ${Green}dev${Color_Off}               Start the Frappe development server (bench start)"
         echo -e "  ${Green}init${Color_Off}              Re-run initialization script (use with caution)"
@@ -916,9 +973,13 @@ case "$1" in
         echo -e "  ${Green}migrate-all${Color_Off}       Run database migrations for all sites"
         echo -e "  ${Green}migrate-site <site>${Color_Off} Run database migrations for a specific site"
         echo -e "  ${Green}new-site <name>${Color_Off}   Create a new site (e.g., site1.localhost)"
-        echo -e "  ${Green}set-default-site <name>${Color_Off} Set the default site for bench commands"
+        echo -e "  ${Green}set-default-site <name>${Color_Off} Set the default site for bench commands (using 'bench use')" # Clarified
+        echo -e "  ${Green}reset-default-site${Color_Off}  Remove explicit 'default_site' from common_site_config.json" # New
+        echo -e "  ${Green}enable-dns-multitenant${Color_Off} Set 'dns_multitenant: true' in common_site_config.json" # New
+        echo -e "  ${Green}disable-serve-default-site${Color_Off} Set 'serve_default_site: false' in common_site_config.json" # New
         echo -e "  ${Green}toggle-dev-mode${Color_Off}   Toggle global developer mode ON/OFF"
         echo -e "  ${Green}toggle-csrf <site>${Color_Off}  Toggle CSRF checks ON/OFF for a site (${Bold_Red}Security Risk!${Color_Off})"
+        echo -e "  ${Green}setup-nginx${Color_Off}       Run 'bench setup nginx' (for production setups)" # New
         echo
         echo -e "${Yellow}App Management:${Color_Off}"
         echo -e "  ${Green}get-app <url> [branch]${Color_Off} Download app from Git repository"
