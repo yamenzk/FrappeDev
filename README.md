@@ -1,6 +1,6 @@
 # FrappeDev - Quick Frappe Docker Development Setup
 
-*(Disclaimer: This README and parts of the associated scripts were generated with assistance from AI.)*
+*(Disclaimer: This full README and parts of the associated scripts were generated with AI.)*
 
 This project streamlines the process of setting up isolated Frappe framework development instances using Docker, optimized for both **GitHub Codespaces** and **local development**. It generates the necessary configuration, sets up Frappe using a specified branch, and provides a powerful helper script (`frappe_helper.sh`) within each instance directory for easy management.
 
