@@ -1,6 +1,7 @@
 # FrappeDev - Quick Frappe Docker Development Setup
+*(Note: This README was generated with AI)*
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) This script (`create_frappe_instance.sh`) streamlines the process of setting up isolated Frappe framework development instances using Docker. It generates the necessary configuration, sets up Frappe using a specified branch, and provides a powerful helper script (`frappe_helper.sh`) within each instance directory for easy management.
+This script (`create_frappe_instance.sh`) streamlines the process of setting up isolated Frappe framework development instances using Docker. It generates the necessary configuration, sets up Frappe using a specified branch, and provides a powerful helper script (`frappe_helper.sh`) within each instance directory for easy management.
 
 Stop worrying about conflicting dependencies or complex manual setups. Get a clean Frappe environment running in minutes!
 
@@ -180,9 +181,3 @@ my-app/
     4.  You can try re-running the initialization with `./frappe_helper.sh init`. If problems persist, it might be easier to `./frappe_helper.sh clean` and run the main `create_frappe_instance.sh` again.
   * **Permission Errors:** The script attempts to set the correct ownership (`1000:1000`) for the `/workspace/frappe-bench` directory inside the container. If you encounter permission issues when bench commands try to write files, double-check the `user: "1000:1000"` setting in `docker-compose.yml` and ensure the `chown` command in `create_frappe_instance.sh` ran successfully during setup.
   * **`bench` commands fail:** Ensure you are running them via the helper script (`./frappe_helper.sh shell` then `bench ...` or `./frappe_helper.sh exec bench ...` or using specific commands like `./frappe_helper.sh migrate-all`) so they execute within the correct container environment.
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome\! Feel free to check [issues page](https://www.google.com/search?q=https://github.com/yamenzk/FrappeDev/issues). \#\# 📜 License
-
-This project is licensed under the MIT License - see the [https://www.google.com/search?q=LICENSE](https://www.google.com/search?q=LICENSE) file for details (or add the MIT license text directly/link to it).
