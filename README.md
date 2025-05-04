@@ -1,6 +1,7 @@
 # FrappeDev - Quick Frappe Docker Development Setup
 
-*This project streamlines the process of setting up isolated Frappe framework development instances using Docker.*
+*This script streamlines the process of setting up isolated Frappe framework development instances using Docker.*
+__🤖 Disclaimer: This README, along with portions of the scripts and configuration files in this repository, were generated with AI__
 
 ## 📑 Table of Contents
 
@@ -9,6 +10,7 @@
 - [⚠️ Prerequisites](#️-prerequisites)
 - [💻 Start Guide: Local Development](#-start-guide-local-development)
 - [☁️ Start Guide: GitHub Codespaces](#️-start-guide-github-codespaces)
+- [🐚 Working with the Container Shell](#-working-with-the-container-shell)
 - [⚙️ Using frappe_helper.sh](#️-using-frappe_helpersh)
 - [🌐 Accessing Your Frappe Instance](#-accessing-your-frappe-instance)
 - [📁 Directory Structure](#-directory-structure)
@@ -107,6 +109,19 @@ FrappeDev provides a simplified approach to creating containerized Frappe develo
    * Click the Globe icon to open in browser
    * Default login: `Administrator` / `admin`
 
+## 🐚 Working with the Container Shell
+
+To run bench commands directly, you need to access the container's shell environment:
+
+```bash
+./frappe_helper.sh shell
+```
+
+This command gives you a shell prompt inside the Frappe container where you can run bench commands directly (`bench --help`)
+
+
+**Note:** When you're done working in the shell, type `exit` to return to your host system's terminal.
+
 ## ⚙️ Using `frappe_helper.sh`
 
 The `frappe_helper.sh` script is included in each instance directory and provides all the tools needed to manage that specific Frappe instance.
@@ -126,7 +141,6 @@ The `frappe_helper.sh` script is included in each instance directory and provide
 | **Multi-site** | `enable-dns-multitenant`, `disable-serve-default-site` |
 
 Run `./frappe_helper.sh` without arguments for the complete command list with descriptions.
-
 
 * **Default Site:** Access `http://localhost:8000`
 * **Custom Sites:**
