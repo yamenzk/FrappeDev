@@ -1,183 +1,242 @@
+Okay, here is the revised README incorporating all your requests for improved organization, clarity, Codespaces workflow details, multi-site handling, and the AI generation notice.
+
+````markdown
 # FrappeDev - Quick Frappe Docker Development Setup
-*(Note: This README was generated with AI)*
 
-This script (`create_frappe_instance.sh`) streamlines the process of setting up isolated Frappe framework development instances using Docker. It generates the necessary configuration, sets up Frappe using a specified branch, and provides a powerful helper script (`frappe_helper.sh`) within each instance directory for easy management.
+*(Disclaimer: This README and parts of the associated scripts were generated with assistance from AI.)*
 
-Stop worrying about conflicting dependencies or complex manual setups. Get a clean Frappe environment running in minutes!
+This project streamlines the process of setting up isolated Frappe framework development instances using Docker, optimized for both **GitHub Codespaces** and **local development**. It generates the necessary configuration, sets up Frappe using a specified branch, and provides a powerful helper script (`frappe_helper.sh`) within each instance directory for easy management.
+
+Get a clean, containerized Frappe environment running in minutes!
+
+## Table of Contents
+
+* [✨ Features](#-features)
+* [⚠️ Prerequisites](#️-prerequisites)
+* [🚀 Setup Workflow](#-setup-workflow)
+    * [Using GitHub Codespaces (Recommended)](#using-github-codespaces-recommended)
+    * [Using Your Local Machine](#using-your-local-machine)
+* [⚙️ Script Details](#️-script-details)
+    * [Running `create_frappe_instance.sh`](#running-create_frappe_instancesh)
+    * [Using `frappe_helper.sh`](#using-frappe_helpersh)
+* [🌐 Accessing Your Frappe Instance](#-accessing-your-frappe-instance)
+* [📁 Directory Structure](#-directory-structure)
+* [💡 Advanced Topics](#-advanced-topics)
+    * [Managing Multiple Instances (Local vs Codespaces)](#managing-multiple-instances-local-vs-codespaces)
+    * [Handling Multiple Sites (within one instance)](#handling-multiple-sites-within-one-instance)
+* [🔧 Troubleshooting](#-troubleshooting)
 
 ## ✨ Features
 
 * **Dockerized Environment:** Runs Frappe and its dependencies (MariaDB, Redis) in isolated Docker containers.
-* **Easy Setup:** Creates a new instance with a single command or through an interactive prompt.
+* **GitHub Codespaces Ready:** Includes a `.devcontainer` configuration for a seamless cloud development experience.
+* **Easy Setup:** Creates new instances with a single command or through an interactive prompt.
 * **Specific Frappe Versions:** Choose the Frappe branch you want to develop against (defaults to `version-15`).
-* **Helper Script Included:** Each instance comes with `frappe_helper.sh` for common tasks like starting/stopping, running bench commands, managing sites/apps, accessing logs, and more.
-* **Source Code Mounting:** Mounts the `frappe-bench` directory for direct code editing on your host machine.
-* **SSH Key Management:** Includes helpers for using host SSH keys or generating new ones inside the container for Git operations.
-* **Clear Console Output:** Uses colored and informative messages during setup and helper script execution.
+* **Helper Script Included:** Each instance comes with `frappe_helper.sh` for common tasks (start/stop, bench commands, sites/apps, logs, etc.).
+* **Multiple Instances (Locally):** Easily create and manage multiple separate Frappe instances on your local machine.
+* **Source Code Mounting:** Mounts the `frappe-bench` directory for direct code editing.
+* **SSH Key Management:** Helpers for using host SSH keys or generating new ones inside the container for Git operations.
+* **Clear Console Output:** Uses colored and informative messages.
 
 ## ⚠️ Prerequisites
 
-Before you begin, ensure you have the following installed on your system:
+**For Local Development:**
 
-1.  **Docker Engine:** The script relies heavily on Docker. [Install Docker](https://docs.docker.com/engine/install/)
-2.  **Docker Compose:** Used to manage the multi-container application.
+1.  **Git:** To clone the repository.
+2.  **Docker Engine:** The script relies heavily on Docker. [Install Docker](https://docs.docker.com/engine/install/)
+3.  **Docker Compose:** Used to manage the multi-container application.
     * The script automatically detects `docker compose` (v2) or `docker-compose` (v1). [Install Docker Compose](https://docs.docker.com/compose/install/)
 
-## 🚀 Installation & Usage
+**For GitHub Codespaces:**
 
-You have two options to use the script:
+1.  A **GitHub Account**. Docker and necessary tools are provided by the Codespace.
 
-**Option 1: Git Clone (Recommended)**
+## 🚀 Setup Workflow
+
+First, get the FrappeDev code onto your system or into your Codespace:
 
 ```bash
 git clone [https://github.com/yamenzk/FrappeDev.git](https://github.com/yamenzk/FrappeDev.git)
-cd FrappeDev
-./create_frappe_instance.sh --name my-frappe-app --branch version-15
 ````
 
-**Option 2: Download and Run**
+Now, follow the specific steps for your chosen environment:
 
-1.  Download the `create_frappe_instance.sh` script.
-2.  Make it executable: `chmod +x create_frappe_instance.sh`
-3.  Run it:
+### Using GitHub Codespaces [(]✨New]
+
+1.  **Create Codespace:**
+      * Navigate to the cloned `FrappeDev` repository page on GitHub.
+      * Click the `<> Code` button -\> "Codespaces" tab.
+      * Click "Create codespace on main" (or your desired branch). GitHub sets up the environment based on `.devcontainer/devcontainer.json`.
+2.  **Run Setup Script:**
+      * Once the Codespace loads (VS Code in browser/local), open a terminal (Ctrl+`or Terminal > New Terminal). The working directory is`/workspaces/FrappeDev\`.
+      * Run the setup script to create your first Frappe instance. Provide a name (e.g., `my-instance`). See [Running `create_frappe_instance.sh`](https://www.google.com/search?q=%23running-create_frappe_instancesh) for options.
+        ```bash
+        ./create_frappe_instance.sh --name my-instance
+        ```
+3.  **Navigate to Instance:**
+      * After the script finishes, navigate to the **newly created instance directory** (it's created *alongside* `FrappeDev`):
+        ```bash
+        cd ../my-instance
+        # You are now in /workspaces/my-instance
+        ```
+4.  **Open Instance Folder (Optional but Recommended):**
+      * To make working with the instance easier in VS Code, open this specific instance folder:
+          * In the VS Code Explorer panel (left side), right-click on the `my-instance` folder (you might need to go up one level from `FrappeDev` first).
+          * Select "Open in Integrated Terminal" or use the main menu: `File` \> `Open Folder...` and select `/workspaces/my-instance`.
+      * This effectively scopes your VS Code explorer and terminal to the instance directory.
+5.  **Start Development Server:**
+      * In a terminal located within the instance directory (`/workspaces/my-instance`), run:
+        ```bash
+        ./frappe_helper.sh dev
+        ```
+6.  **Access Frappe:** Use the "Ports" tab in VS Code. See [Accessing Your Frappe Instance](https://www.google.com/search?q=%23-accessing-your-frappe-instance).
+
+### Using Your Local Machine
+
+1.  **Clone Repo:**
     ```bash
-    ./create_frappe_instance.sh --name my-frappe-app
+    git clone [https://github.com/yamenzk/FrappeDev.git](https://github.com/yamenzk/FrappeDev.git)
     ```
+2.  **Navigate into Repo:**
+    ```bash
+    cd FrappeDev
+    ```
+3.  **Ensure Executable:**
+    ```bash
+    chmod +x ./create_frappe_instance.sh
+    ```
+4.  **Run Setup Script:**
+      * Run the script from within the `FrappeDev` directory to create your instance. Provide a name (e.g., `my-local-instance`). See [Running `create_frappe_instance.sh`](https://www.google.com/search?q=%23running-create_frappe_instancesh) for options.
+        ```bash
+        ./create_frappe_instance.sh --name my-local-instance --branch version-14
+        ```
+5.  **Navigate to Instance:**
+      * After the script finishes, navigate to the **newly created instance directory** (created alongside `FrappeDev`):
+        ```bash
+        cd ../my-local-instance
+        # Example: If FrappeDev is in /home/user/projects/, you are now in /home/user/projects/my-local-instance/
+        ```
+6.  **Start Development Server:**
+      * In the terminal within the instance directory, run:
+        ```bash
+        ./frappe_helper.sh dev
+        ```
+7.  **Access Frappe:** Open `http://localhost:8000` in your browser. See [Accessing Your Frappe Instance](https://www.google.com/search?q=%23-accessing-your-frappe-instance).
 
------
+## ⚙️ Script Details
 
 ### Running `create_frappe_instance.sh`
 
-This script sets up the entire instance directory and starts the initial services.
+This script is run **from within the `FrappeDev` directory**. It orchestrates the creation of a new, independent Frappe instance directory alongside `FrappeDev`.
 
 **Command-Line Arguments:**
 
-  * `--name <instance_name>`: (Required) Specifies the name for your Frappe instance. This will also be the name of the directory created. Must contain only letters, numbers, underscores (`_`), and dashes (`-`).
-  * `--branch <branch_name>`: (Optional) Specifies the Frappe framework branch to clone. Defaults to `version-15`.
-
-**Examples:**
-
-```bash
-# Create an instance named 'my-erp' using the default branch (version-15)
-./create_frappe_instance.sh --name my-erp
-
-# Create an instance named 'bleeding-edge' using the 'develop' branch
-./create_frappe_instance.sh --name bleeding-edge --branch develop
-```
+  * `--name <instance_name>`: (Required) Name for your Frappe instance directory. Must contain only letters, numbers, underscores (`_`), and dashes (`-`).
+  * `--branch <branch_name>`: (Optional) Frappe framework branch to clone. Defaults to `version-15`.
 
 **Interactive Mode:**
 
-If you run the script without the `--name` argument, it will enter interactive mode, prompting you for the instance name and branch.
-
-```bash
-./create_frappe_instance.sh
-```
+Run `./create_frappe_instance.sh` without `--name` for interactive prompts.
 
 **What it Does:**
 
-1.  Checks for Docker and Docker Compose.
-2.  Prompts for instance name and branch if not provided.
-3.  Creates a directory named `<instance_name>`.
-4.  Generates `docker-compose.yml` with services (frappe, mariadb, redis\*3).
-5.  Generates `scripts/init.sh` which runs *inside* the container to:
-      * Wait for database/redis.
-      * Setup NVM and Yarn.
-      * Initialize the Frappe bench (`bench init`).
-      * Configure bench settings (database/redis hosts).
-      * Create the initial site (default: `dev.localhost`).
-      * Enable developer mode.
-      * Patch Procfile for NVM compatibility.
-6.  Generates the `frappe_helper.sh` script.
-7.  Starts the Docker containers using `docker compose up -d`.
-8.  Installs necessary tools (`nc`, `mysql-client`, `redis-tools`) inside the `frappe` container.
-9.  Sets correct ownership for the mounted `frappe-bench` volume.
-10. Executes the `scripts/init.sh` script inside the `frappe` container.
-11. Prints a summary with access details and helper script usage.
+1.  Checks prerequisites (Docker, Docker Compose on local).
+2.  Creates the `<instance_name>/` directory alongside `FrappeDev/`.
+3.  Generates `docker-compose.yml`, `scripts/init.sh`, and `frappe_helper.sh` within `<instance_name>/`.
+4.  The `init.sh` script (run inside the container) initializes the Frappe bench, creates the default site (`dev.localhost`), enables developer mode, etc.
+5.  Starts the Docker containers for the new instance.
+6.  Installs necessary tools inside the `frappe` container.
+7.  Sets volume ownership and runs the `init.sh`.
+8.  Prints a summary with access details.
 
------
+### Using `frappe_helper.sh`
 
-### Using the `frappe_helper.sh` Script
-
-Once the setup is complete, `cd` into your instance directory (`<instance_name>`) and use the `frappe_helper.sh` script to manage your development environment.
+This script resides **inside each `<instance_name>` directory** and is used to manage that specific instance. Always run it from within the target instance directory.
 
 ```bash
-cd my-frappe-app
+cd ../my-instance # Navigate to the instance directory first!
 ./frappe_helper.sh <command> [options]
 ```
 
-Run `./frappe_helper.sh` without arguments to see the full list of commands.
+Run `./frappe_helper.sh` without arguments for the full command list.
 
 **Key Commands:**
 
-  * **Docker Management:**
+  * **Docker:** `start`, `stop`, `restart`, `status`, `logs`, `clean` (removes containers *and data* for this instance).
+  * **Bench/Site:** `shell`, `dev`, `init`, `update`, `migrate-all`, `migrate-site <site>`, `new-site <name.localhost>`, `set-default-site <name>`, `toggle-dev-mode`, `toggle-csrf <site>`.
+  * **Apps:** `get-app <url> [branch]`, `install-app <app> <site>`, `uninstall-app <app> <site>`, `build-app <app>`.
+  * **Utilities:** `setup-ssh`, `exec <cmd> [args...]`.
+  * **Multi-site:** `enable-dns-multitenant`, `disable-serve-default-site`.
 
-      * `start`: Start containers.
-      * `stop`: Stop containers.
-      * `restart`: Restart containers.
-      * `status`: Show container status.
-      * `logs`: Follow logs from the `frappe` container.
-      * `clean`: **Stop and remove containers AND associated data volumes (MariaDB data will be lost\!).**
-
-  * **Bench / Site Management:**
-
-      * `shell`: Open an interactive `bash` shell inside the `frappe` container (in the bench directory).
-      * `dev`: Start the Frappe development server (`bench start`). Access via `http://localhost:8000`.
-      * `init`: Re-run the internal `scripts/init.sh` (use with caution).
-      * `update`: Run `bench update`.
-      * `migrate-all`: Run `bench migrate` for all sites.
-      * `migrate-site <site>`: Run `bench migrate` for a specific site.
-      * `new-site <name.localhost>`: Create a new Frappe site (requires manual `/etc/hosts` entry).
-      * `set-default-site <name>`: Set the default site used by bench commands.
-      * `toggle-dev-mode`: Enable/disable global developer mode.
-      * `toggle-csrf <site>`: Enable/disable CSRF checks for a site (**Security Risk\!**).
-
-  * **App Management:**
-
-      * `get-app <url> [branch]`: Download an app via `bench get-app`.
-      * `install-app <app> <site>`: Install an app to a site (`bench --site <site> install-app <app>`).
-      * `uninstall-app <app> <site>`: Uninstall an app from a site.
-      * `build-app <app>`: Build JS/CSS assets for an app (`bench build --app <app>`).
-
-  * **Utilities:**
-
-      * `setup-ssh`: Interactively configure SSH keys inside the container (use host keys or generate new ones) for Git access.
-      * `exec <cmd> [args...]`: Execute any command inside the `frappe` container.
-
------
+*(Refer to the script's help output for detailed descriptions)*
 
 ## 🌐 Accessing Your Frappe Instance
 
-  * **Default Site:** The initial site (`dev.localhost` by default) is accessible at `http://localhost:8000`.
-      * Username: `Administrator`
-      * Password: `admin` (or as set during init/new-site)
-  * **Custom Sites:** If you create new sites (e.g., `mysite.localhost`) using `./frappe_helper.sh new-site mysite.localhost`, you need to add an entry to your **host machine's** hosts file (`/etc/hosts` on Linux/macOS, `C:\Windows\System32\drivers\etc\hosts` on Windows):
-    ```
-    127.0.0.1   mysite.localhost
-    ```
-    Then you can access the site at `http://mysite.localhost:8000`.
+  * **In GitHub Codespaces:**
 
-## 📁 Instance Directory Structure
+    1.  Run `./frappe_helper.sh dev` inside the instance directory.
+    2.  Go to the **"Ports"** tab in VS Code.
+    3.  Find port `8000` and click the **Globe icon (Open in Browser)**.
 
-After running `create_frappe_instance.sh --name my-app`, you will have:
+    <!-- end list -->
+
+      * Login: `Administrator` / `admin` (default)
+
+  * **On Your Local Machine:**
+
+      * **Default Site (`dev.localhost`):** Access `http://localhost:8000`.
+          * Login: `Administrator` / `admin` (default)
+      * **Custom Sites (e.g., `mysite.localhost`):**
+        1.  Add `127.0.0.1 mysite.localhost` to your **host machine's** hosts file (`/etc/hosts` or `C:\Windows\System32\drivers\etc\hosts`).
+        2.  Access `http://mysite.localhost:8000`.
+
+## 📁 Directory Structure
+
+After cloning `FrappeDev` and creating an instance named `my-app`:
 
 ```
-my-app/
-├── docker-compose.yml  # Docker service definitions
-├── frappe-bench/       # Mounted Frappe bench source code (edit code here!)
-├── frappe_helper.sh    # Your main tool for managing this instance
-└── scripts/
-    └── init.sh         # Initialization script run inside the container
+<your_workspace>/
+├── FrappeDev/                # Cloned repository - contains setup logic
+│   ├── .devcontainer/        # Codespaces configuration
+│   │   └── devcontainer.json
+│   ├── lib/                  # Helper scripts used by setup
+│   ├── templates/            # Templates for generated files
+│   └── create_frappe_instance.sh # The main setup script
+│
+└── my-app/                   # << Generated instance directory >>
+    ├── docker-compose.yml    # Docker service definitions for this instance
+    ├── frappe-bench/         # Mounted Frappe bench source code (edit code here!)
+    ├── frappe_helper.sh      # Your main tool for managing *this* instance
+    └── scripts/
+        └── init.sh           # Initialization script run inside the container
 ```
 
-*(Note: The `mariadb-data` volume is managed by Docker and not typically visible as a directory here unless explicitly mapped)*
+## 💡 Advanced Topics
+
+### Managing Multiple Instances (Local vs Codespaces)
+
+  * **Local Machine:** You can create multiple independent instances by running `create_frappe_instance.sh` (from `FrappeDev/`) multiple times with different names. Each will get its own directory alongside `FrappeDev/`.
+      * **❗ Port Conflicts:** To run multiple instances *simultaneously* locally, you **must** edit the `docker-compose.yml` file in the second (and subsequent) instance directories *before* starting them (`./frappe_helper.sh start`). Change the host-side ports (left side of the colon `:`) in the `ports:` sections to unused values (e.g., change `8000:8000` to `8001:8000`, `3307:3306` to `3308:3306`, etc.).
+  * **GitHub Codespaces:** While technically possible to create multiple instance directories within one Codespace, it's **strongly recommended to create a separate Codespace for each distinct project or Frappe instance**. This provides better resource isolation, avoids potential port/configuration headaches, and keeps environments clean.
+
+### Handling Multiple Sites (within one instance)
+
+If you use `./frappe_helper.sh new-site <sitename>` to create additional sites *within a single Frappe instance*:
+
+1.  **Hosts File:** You still need to add entries for each site name to your hosts file (local machine) or rely on Codespaces port forwarding if applicable (though accessing specific hostnames via the forwarded port might require browser plugins or further configuration).
+2.  **DNS Multitenancy:** Frappe/Bench needs to know how to handle requests for different hostnames. You may need to enable DNS-based multitenancy:
+      * `cd` into the instance directory.
+      * Run `./frappe_helper.sh enable-dns-multitenant`.
+3.  **Serve Default Site:** Sometimes, especially with DNS multitenancy, you might want to prevent Bench from serving the default site if no hostname matches.
+      * Run `./frappe_helper.sh disable-serve-default-site`.
+4.  **Restart Bench:** After changing these settings, restart the bench process for them to take effect:
+      * If using `dev`: `./frappe_helper.sh stop` (if running) then `./frappe_helper.sh dev`.
+      * Alternatively: `./frappe_helper.sh restart`.
 
 ## 🔧 Troubleshooting
 
-  * **Port Conflicts:** The default setup uses ports `3307` (MariaDB), `13000`, `11000`, `12000` (Redis instances), `8000-8005` (Frappe HTTP), and `9000-9005` (SocketIO) on the host. If these conflict with other services, edit the `ports:` section in `docker-compose.yml` *before* the initial `up` or after running `./frappe_helper.sh stop`.
-  * **`init.sh` Fails:** Check the output of the initial setup. If `scripts/init.sh` failed:
-    1.  Look for errors in the setup log.
-    2.  Try running `./frappe_helper.sh logs` to see container logs.
-    3.  Attempt to fix the issue (e.g., network problems, branch name typos).
-    4.  You can try re-running the initialization with `./frappe_helper.sh init`. If problems persist, it might be easier to `./frappe_helper.sh clean` and run the main `create_frappe_instance.sh` again.
-  * **Permission Errors:** The script attempts to set the correct ownership (`1000:1000`) for the `/workspace/frappe-bench` directory inside the container. If you encounter permission issues when bench commands try to write files, double-check the `user: "1000:1000"` setting in `docker-compose.yml` and ensure the `chown` command in `create_frappe_instance.sh` ran successfully during setup.
-  * **`bench` commands fail:** Ensure you are running them via the helper script (`./frappe_helper.sh shell` then `bench ...` or `./frappe_helper.sh exec bench ...` or using specific commands like `./frappe_helper.sh migrate-all`) so they execute within the correct container environment.
+  * **Codespaces: Container Creation Fails:** Check Codespace creation logs (View -\> Output -\> Codespaces). Look for errors like `unable to find user`. Try adjusting `image` or `remoteUser` in `.devcontainer/devcontainer.json`, commit the change, and rebuild (Command Palette -\> Codespaces: Rebuild Container).
+  * **Port Conflicts (Local):** See "Managing Multiple Instances" section.
+  * **`init.sh` Fails During Setup:** Check terminal output from `create_frappe_instance.sh`. `cd` into the failed instance directory (`cd ../<instance_name>`) and use `./frappe_helper.sh logs`. Try fixing the underlying issue and re-run initialization with `./frappe_helper.sh init`. If needed, clean up (`rm -rf ../<instance_name>`) and start over.
+  * **Permissions:** Ensure `create_frappe_instance.sh` is executable. If bench commands fail with permission errors inside the container, verify `user: "1000:1000"` in `docker-compose.yml` and check setup logs for `chown` success.
+  * **`bench` commands fail:** Always run bench commands via the helper script *from within the specific instance directory* (`./frappe_helper.sh <command>`).
