@@ -3,7 +3,6 @@
 
 source "$(dirname "${BASH_SOURCE[0]}")/helpers.sh"
 
-# Call this function like: read INSTANCE_NAME BRANCH <<< "$(process_input "$@")"
 process_input() {
     local instance_name=""
     local branch=""
@@ -44,7 +43,6 @@ process_input() {
     echo "$branch"
 }
 
-# Call this function like: validate_input "$INSTANCE_NAME" "$BRANCH"
 validate_input() {
     local instance_name="$1"
     local branch="$2"

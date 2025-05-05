@@ -57,7 +57,7 @@ services:
     user: "1000:1000" # Run as frappe user (UID 1000) for permission consistency
     environment:
       - SHELL=/bin/bash
-      - CHOKIDAR_USEPOLLING=true # Helps file watching in Docker
+      - CHOKIDAR_USEPOLLING=true # Helps file watching in Docker (For Front-end Development)
       - FRAPPE_SITE_NAME_HEADER=X-Frappe-Site-Name # Support for multi-tenant headers if needed
     volumes:
       - ./scripts:/workspace/scripts:ro 

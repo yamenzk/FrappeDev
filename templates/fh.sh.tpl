@@ -3,12 +3,10 @@
 # Generated for instance: __INSTANCE_NAME_PLACEHOLDER__
 
 # --- Colors (Copied from lib/colors.sh for standalone use) ---
-Color_Off='\033[0m'       # Text Reset
+Color_Off='\033[0m'       
 Black='\033[0;30m'; Red='\033[0;31m'; Green='\033[0;32m'; Yellow='\033[0;33m'; Blue='\033[0;34m'; Purple='\033[0;35m'; Cyan='\033[0;36m'; White='\033[0;37m'
 BBlack='\033[1;30m'; BRed='\033[1;31m'; BGreen='\033[1;32m'; BYellow='\033[1;33m'; BBlue='\033[1;34m'; BPurple='\033[1;35m'; BCyan='\033[1;36m'; BWhite='\033[1;37m'
 Bold_Blue=$BBlue; Bold_Green=$BGreen; Bold_Yellow=$BYellow; Bold_Red=$BRed
-
-# --- Helper Echo (Copied from lib/helpers.sh for standalone use) ---
 info() { echo -e "${Blue}[INFO]${Color_Off} $1"; }
 success() { echo -e "${Green}[SUCCESS]${Color_Off} $1"; }
 warning() { echo -e "${Yellow}[WARNING]${Color_Off} $1"; }
@@ -19,14 +17,13 @@ BENCH_DIR="/workspace/frappe-bench"
 DB_ROOT_PASSWORD="123" # Default password set in docker-compose/init.sh
 
 # --- Detect Compose Command ---
-# Function to detect the available Docker Compose command (copied from lib/docker_utils.sh)
 get_docker_compose_command() {
     if docker compose version &> /dev/null; then
         echo "docker compose"
     elif command -v docker-compose &> /dev/null; then
         echo "docker-compose"
     else
-        echo "" # Return empty string if neither is found
+        echo "" 
     fi
 }
 
@@ -35,16 +32,13 @@ if [[ -z "$DOCKER_COMPOSE_CMD" ]]; then
     error "Docker Compose command not found."
     exit 1
 fi
-# info "Using Docker Compose command: '$DOCKER_COMPOSE_CMD'" # Optional: uncomment for debugging
+
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTANCE_NAME=$(basename "$SCRIPT_DIR")
-# Ensure we are in the instance directory when running docker compose commands
 cd "$SCRIPT_DIR" || exit 1
 
-# --- Helper Functions for Running Commands in Container ---
 
-# run_bench: Executes a bench command inside the container's bench directory
 run_bench() {
     local args=("$@")
     local interactive_flag=false
@@ -58,7 +52,6 @@ run_bench() {
     return $exit_code
 }
 
-# run_in_container: Executes an arbitrary command inside the container
 run_in_container() {
     local args=("$@")
     local interactive_flag=false
@@ -72,7 +65,6 @@ run_in_container() {
     return $exit_code
 }
 
-# get_config_value: Retrieves a config value from bench (site or global)
 get_config_value() {
     local scope=$1; local key=""; local site_arg=""
     if [[ "$scope" == "site" ]]; then
@@ -81,12 +73,9 @@ get_config_value() {
     elif [[ "$scope" == "global" ]]; then
         if [[ -z "$2" ]]; then error "Usage: get_config_value global <key>"; return 1; fi; key="$2";
     else error "Invalid scope '$scope'. Use 'site' or 'global'."; return 1; fi
-    # Execute quietly, grab only the last line which should be the value
     $DOCKER_COMPOSE_CMD exec -T -w "$BENCH_DIR" frappe bench $site_arg get-config "$key" 2>/dev/null | tail -n 1
-    # Check the exit status of the *docker exec* command itself
-    # $? reflects the exit status of tail, PIPESTATUS[0] reflects bench command status
-    if [ ${PIPESTATUS[0]} -ne 0 ]; then return 1; fi # Return error if bench get-config failed
-    return 0 # Return success if docker exec and tail worked
+    if [ ${PIPESTATUS[0]} -ne 0 ]; then return 1; fi 
+    return 0 
 }
 
 
@@ -111,23 +100,21 @@ case "$1" in
         ;;
     shell)
         info "Opening shell in Frappe container (at $BENCH_DIR) for instance '$INSTANCE_NAME'..."
-        $DOCKER_COMPOSE_CMD exec -it -w "$BENCH_DIR" frappe bash # Always interactive
+        $DOCKER_COMPOSE_CMD exec -it -w "$BENCH_DIR" frappe bash
         ;;
     dev)
         info "Starting Frappe development server inside container (bench start) for instance '$INSTANCE_NAME'..."
-        run_bench start --interactive # Needs interactive
+        run_bench start --interactive
         ;;
     init)
         warning "Re-running initialization script (scripts/init.sh) for instance '$INSTANCE_NAME'."
         warning "This is usually only needed on first setup or if init failed."
         read -p "Are you sure? (y/n): " -n 1 -r; echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            info "Ensuring tools (nc, mysql, redis) are installed in container (as root)..."
-            # Run as root just for apt-get
+            info "Ensuring tools (nc, mysql, redis) are installed in container..."
             $DOCKER_COMPOSE_CMD exec -T -u root frappe bash -c "export DEBIAN_FRONTEND=noninteractive && apt-get update -qq >/dev/null && apt-get install -y -qq --no-install-recommends netcat-openbsd mariadb-client redis-tools apt-utils > /dev/null"
             if [ $? -ne 0 ]; then error "Failed to install tools. Aborting init."; exit 1; fi
             info "Executing scripts/init.sh inside container (as user frappe)..."
-            # Run init script as frappe user, interactively to see output
             $DOCKER_COMPOSE_CMD exec -it -u frappe frappe bash /workspace/scripts/init.sh
             if [ $? -eq 0 ]; then success "Init script finished."; else error "Init script failed."; fi
         else info "Operation cancelled."; fi
@@ -141,33 +128,26 @@ case "$1" in
         $DOCKER_COMPOSE_CMD ps
         ;;
     build-app)
-        shift # Remove 'build-app'
+        shift
         if [ -z "$1" ]; then error "App name required. Usage: $0 build-app <app_name>"; exit 1; fi
         run_bench build --app "$1" && success "Assets built for app '$1'."
         ;;
     setup-ssh)
         info "Setting up SSH for Git access inside container for instance '$INSTANCE_NAME'..."
-
-        # --- Check mount status INSIDE the container ---
-        # Check involves: 1. Does dir exist? 2. If yes, can we write a temp file?
         mount_status_cmd="if [ -d /home/frappe/.ssh ]; then if touch /home/frappe/.ssh/.fh_write_test 2>/dev/null; then rm /home/frappe/.ssh/.fh_write_test; echo 'writable'; else echo 'readonly'; fi; else echo 'missing'; fi"
-        # Run the check quietly using exec -T, capture output
         mount_info=$($DOCKER_COMPOSE_CMD exec -T frappe bash -c "$mount_status_cmd")
         mount_check_exit_code=$?
 
         if [ $mount_check_exit_code -ne 0 ]; then
             error "Failed to check SSH directory status inside the container. Docker exec might be failing or container not running."
-             # Attempt to determine if container is running
              if ! $DOCKER_COMPOSE_CMD ps -q frappe > /dev/null 2>&1; then
                  error "The 'frappe' container does not appear to be running. Start it with '$0 start'."
              fi
             exit 1
         fi
 
-        # --- User Interaction ---
         read -p "Use host SSH keys (requires ~/.ssh mounted read-only)? (Y/n): " -n 1 -r; echo
         if [[ -z "$REPLY" || $REPLY =~ ^[Yy]$ ]]; then
-            # --- Use Host Keys Path ---
             case "$mount_info" in
                 "writable")
                     warning "/home/frappe/.ssh exists inside the container but appears WRITABLE."
@@ -191,24 +171,19 @@ case "$1" in
             info "Assuming host SSH keys are configured. Test with: ${Cyan}$0 exec ssh -T git@github.com${Color_Off}"
 
         else
-            # --- Generate New Keys Path ---
             target_key_path=""
             key_gen_cmd=""
 
             case "$mount_info" in
                 "writable" | "missing")
-                    # Standard location is writable or doesn't exist yet (parent /home/frappe assumed writable)
                     target_key_path="/home/frappe/.ssh/id_ed25519"
                     info "Generating new keys in standard location (${target_key_path})."
-                    # Need to ensure .ssh dir exists and has correct permissions before keygen
                     key_gen_cmd="mkdir -p /home/frappe/.ssh && chmod 700 /home/frappe/.ssh && ssh-keygen -t ed25519 -f \"${target_key_path}\" -N \"\" -C \"frappe-dev-$(date +%Y-%m-%d)\" && chmod 600 \"${target_key_path}\" && chmod 644 \"${target_key_path}.pub\""
                     ;;
                 "readonly")
-                    # Standard location exists but is read-only (likely host mount)
-                    target_key_path="/home/frappe/id_ed25519_generated" # Generate in home dir instead
+                    target_key_path="/home/frappe/id_ed25519_generated"
                     warning "/home/frappe/.ssh is read-only (likely host mount). Generating new keys elsewhere."
                     info "Generating new keys in ${target_key_path} instead."
-                    # No need for mkdir/chmod on .ssh as it exists (read-only)
                     key_gen_cmd="ssh-keygen -t ed25519 -f \"${target_key_path}\" -N \"\" -C \"frappe-dev-$(date +%Y-%m-%d)\" && chmod 600 \"${target_key_path}\" && chmod 644 \"${target_key_path}.pub\""
                     ;;
                  *)
@@ -217,43 +192,34 @@ case "$1" in
                     ;;
             esac
 
-            # Ask confirmation *after* determining the path
             read -p "Generate a new SSH keypair (ed25519, no passphrase) at '${target_key_path}'? (y/n): " -n 1 -r; echo
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 info "Generating SSH key inside the Frappe container..."
-                run_in_container "$key_gen_cmd" # Execute the determined command
+                run_in_container "$key_gen_cmd"
                 key_gen_exit_code=$?
                 if [ $key_gen_exit_code -eq 0 ]; then
                      success "SSH key generated."
 
-                     # --- Improved Public Key Display ---
                      echo -e "\n${Bold_Yellow}=============== ADD THIS PUBLIC KEY TO GITHUB/GITLAB ===============${Color_Off}"
                      echo -e "${Cyan}Copy the entire line below (starting with 'ssh-'):${Color_Off}\n"
-                     # Capture the key content directly, avoid showing the 'cat' command here
                      public_key_content=$($DOCKER_COMPOSE_CMD exec -T frappe cat "${target_key_path}.pub" 2>/dev/null)
-                     # Check if key content was captured
                      if [ -n "$public_key_content" ]; then
-                         # Print with indentation and color for clarity
                          echo -e "  ${Bold_Green}${public_key_content}${Color_Off}\n"
                      else
-                         # Fallback if capturing failed
                          error "Could not retrieve public key content from ${target_key_path}.pub"
                          warning "Attempting fallback display:"
-                         run_in_container "cat \"${target_key_path}.pub\"" # Fallback display
+                         run_in_container "cat \"${target_key_path}.pub\""
                      fi
                      echo -e "${Bold_Yellow}======================= END OF PUBLIC KEY ========================${Color_Off}\n"
-                     # --- End Improved Display ---
 
                      info "Private key saved at: ${target_key_path} (inside the container)"
 
-                     # --- Configure System SSH Client (Fix: Removed 'local') ---
+                     # --- Configure System SSH Client  ---
                      # If the key was generated in the alternate path due to read-only .ssh
                      if [[ "$target_key_path" == "/home/frappe/id_ed25519_generated" ]]; then
                          info "Attempting to configure system SSH client to recognize the generated key..."
-                         identity_line="IdentityFile ${target_key_path}" # No 'local'
-                         ssh_config_file="/etc/ssh/ssh_config"         # No 'local'
-                         # Check if the line already exists (requires grep in container)
-                         # Use docker exec directly for root commands for simplicity here
+                         identity_line="IdentityFile ${target_key_path}"
+                         ssh_config_file="/etc/ssh/ssh_config" 
                          if ! $DOCKER_COMPOSE_CMD exec -T -u root frappe grep -qF "$identity_line" "$ssh_config_file"; then
                              info "Adding '$identity_line' to $ssh_config_file"
                              $DOCKER_COMPOSE_CMD exec -T -u root frappe bash -c "echo \"$identity_line\" >> \"$ssh_config_file\""
@@ -266,14 +232,10 @@ case "$1" in
                              info "System SSH client already configured for $target_key_path."
                          fi
                      fi
-                     # --- End Configure System SSH Client ---
 
-                     # Updated warning logic
                      if [[ "$mount_info" == "readonly" ]]; then
                         warning "Ensure the public key displayed above is added to GitHub/GitLab."
                         if [[ "$target_key_path" == "/home/frappe/id_ed25519_generated" ]]; then
-                             # Only show this specific warning if the key is outside .ssh and config might have failed
-                             # Check if the command to add the IdentityFile likely failed (a bit indirect)
                              check_config_cmd="$DOCKER_COMPOSE_CMD exec -T -u root frappe grep -qF \"$identity_line\" \"$ssh_config_file\""
                              if ! eval "$check_config_cmd"; then
                                 warning "If auto-config failed, you might need 'ssh -i $target_key_path'."
@@ -287,20 +249,47 @@ case "$1" in
         fi
         ;;
     exec)
-        shift # Remove 'exec' from arguments
+        shift 
         if [ -z "$*" ]; then error "No command provided to execute. Usage: $0 exec <command_to_run_in_container>"; exit 1; fi
-        if [[ "$1" == "bash" || "$1" == "sh" || "$1" == "ssh" ]]; then # Make ssh interactive too
+        if [[ "$1" == "bash" || "$1" == "sh" || "$1" == "ssh" ]]; then 
             run_in_container "$@" --interactive
         else run_in_container "$@"; fi
         ;;
     clean)
+        delete_dir_flag=false
+        if [[ "$2" == "-d" || "$2" == "-p" ]]; then
+            delete_dir_flag=true
+            shift 
+        fi
         warning "This will stop and REMOVE all containers and data (volumes) for instance '$INSTANCE_NAME'!"
         warning "Local code in './frappe-bench' will remain."
+        if $delete_dir_flag; then
+            warning "${Bold_Red}You used -d. This will ALSO DELETE the entire instance directory: $SCRIPT_DIR${Color_Off}"
+        fi
         read -p "Are you sure? (y/n): " -n 1 -r; echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             info "Stopping containers and removing volumes for '$INSTANCE_NAME'..."
             $DOCKER_COMPOSE_CMD down -v
+            if [ $? -ne 0 ]; then
+                error "Docker compose down failed. Aborting before directory deletion."
+                exit 1
+            fi
             success "Instance '$INSTANCE_NAME' cleaned. All container data lost."
+            if $delete_dir_flag; then
+                info "Deleting instance directory '$SCRIPT_DIR'..."
+                parent_dir=$(dirname "$SCRIPT_DIR")
+                instance_basename=$(basename "$SCRIPT_DIR")
+                cd "$parent_dir" || { error "Could not navigate to parent directory '$parent_dir'."; exit 1; }
+                rm -rf "$instance_basename"
+                if [ $? -eq 0 ]; then
+                    success "Instance directory '$instance_basename' deleted."
+                    exit 0
+                else
+                    error "Failed to delete instance directory '$instance_basename'."
+                    cd "$instance_basename" 2>/dev/null || true
+                    exit 1
+                fi
+            fi
         else info "Operation cancelled."; fi
         ;;
     
@@ -309,14 +298,11 @@ case "$1" in
         warning "The effective default site will then depend on the last site set via 'bench use'."
         read -p "Are you sure you want to remove the explicit default site setting? (y/n): " -n 1 -r; echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            # Using bench config command to remove the key
             run_bench config remove-common-config default_site
             if [ $? -eq 0 ]; then
                 success "Attempted to remove 'default_site' from common config."
                 info "Please restart bench ('$0 dev') for changes to potentially take effect."
             else
-                # Note: bench config might return non-zero if key doesn't exist, which is okay.
-                # We might need more robust error checking depending on bench version behavior.
                 warning "Bench command finished. The key might have already been absent or an error occurred."
             fi
         else info "Operation cancelled."; fi
@@ -324,7 +310,6 @@ case "$1" in
 
     enable-dns-multitenant)
         info "Setting 'dns_multitenant' to 'true' (on) in common_site_config.json for instance '$INSTANCE_NAME'..."
-        # Use bench config command
         run_bench config dns_multitenant on
         if [ $? -eq 0 ]; then
             success "'dns_multitenant' set to 'on'."
@@ -337,7 +322,6 @@ case "$1" in
         warning "This might help ensure hostname matching works correctly with DNS multitenancy."
         read -p "Are you sure you want to set 'serve_default_site' to false? (y/n): " -n 1 -r; echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            # Use bench set-config -g (like developer_mode) and '0' for false
             run_bench set-config -g serve_default_site 0
             if [ $? -eq 0 ]; then
                 success "'serve_default_site' set to '0' (false)."
@@ -361,11 +345,10 @@ case "$1" in
         else info "Operation cancelled."; fi
         ;;
 
-    # --- NEW/MERGED COMMANDS ---
     update)
         info "Running 'bench update' (updates bench, Frappe, all installed apps) for instance '$INSTANCE_NAME'..."
         warning "Watch output for merge conflicts or errors. Run with --interactive."
-        run_bench update --interactive # Often requires interactive prompts
+        run_bench update --interactive 
         if [ $? -eq 0 ]; then
             success "'bench update' completed."
             read -p "Run database migrations for all sites now? (Y/n): " -n 1 -r; echo
@@ -388,11 +371,9 @@ case "$1" in
         shift; site_name="$1"; admin_password="admin"
         if [ -z "$site_name" ]; then error "Site name required. Usage: $0 new-site <site_name>"; exit 1; fi
         if ! [[ "$site_name" =~ ^[a-zA-Z0-9._-]+$ ]]; then
-            # Simple validation allowing dots and hyphens - adjust if needed
             error "Invalid site name: '$site_name'. Should typically be domain-like (e.g., site1.localhost, myapp.test)."
             exit 1
         fi
-        # Warning if it doesn't end in .localhost for typical dev setup
         if ! [[ "$site_name" =~ \.localhost$ ]]; then
              warning "Site name '$site_name' does not end with '.localhost'. Accessing it via http://$site_name:8000 might require additional host/DNS configuration."
         fi
@@ -418,11 +399,9 @@ case "$1" in
     toggle-dev-mode)
         info "Toggling global developer mode (common_site_config.json) for instance '$INSTANCE_NAME'..."
         current_value=$(get_config_value global developer_mode)
-        # Check status of get_config_value
         if [ $? -ne 0 ]; then error "Could not retrieve current developer_mode setting."; exit 1; fi
 
         new_value=1; status_msg="ON"; current_status="OFF"
-        # Check if the retrieved value is exactly "1"
         if [[ "$current_value" == "1" ]]; then
             new_value=0; status_msg="OFF"; current_status="ON";
         fi
@@ -443,11 +422,9 @@ case "$1" in
 
         info "Toggling CSRF check setting ('ignore_csrf') for site '$site_name'..."
         current_value=$(get_config_value site "$site_name" ignore_csrf)
-        # Check status of get_config_value
         if [ $? -ne 0 ]; then error "Could not retrieve CSRF setting for site '$site_name'. Does the site exist?"; exit 1; fi
 
         new_value=1; status_msg="ON (CSRF Disabled)"; current_status="OFF (CSRF Enabled)"
-        # Check if the retrieved value is exactly "1"
         if [[ "$current_value" == "1" ]]; then
              new_value=0; status_msg="OFF (CSRF Enabled)"; current_status="ON (CSRF Disabled)";
         fi

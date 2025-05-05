@@ -1,7 +1,6 @@
 #!/bin/bash
 # lib/docker_utils.sh
 
-# Function to detect the available Docker Compose command
 get_docker_compose_command() {
     if docker compose version &> /dev/null; then
         echo "docker compose"

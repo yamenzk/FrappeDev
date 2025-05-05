@@ -35,7 +35,7 @@ fi
 INSTANCE_NAME=$(echo "$CAPTURED_OUTPUT" | sed -n '1p')
 BRANCH=$(echo "$CAPTURED_OUTPUT" | sed -n '2p')
 
-set -e # Re-enable exit on error
+set -e
 
 # --- Final Validation ---
 validate_input "$INSTANCE_NAME" "$BRANCH"

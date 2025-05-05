@@ -1,7 +1,7 @@
 #!/bin/bash
 # lib/colors.sh
 
-Color_Off='\033[0m'       # Text Reset
+Color_Off='\033[0m'       # Reset
 
 # Regular Colors
 Black='\033[0;30m'        
