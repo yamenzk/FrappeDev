@@ -141,10 +141,8 @@ ${Bold_Green}Frappe instance '$INSTANCE_NAME' (Branch: $BRANCH) is ready!${Color
 Use the helper script in '$INSTANCE_DIR': ${Bold_Green}./fh.sh${Color_Off}
   Run ${Bold_Green}./fh.sh${Color_Off} without arguments to see available commands.
 ======================================================
-${Yellow}Note:${Color_Off} Accessing specific *.localhost sites (e.g., site1.localhost)
-      requires adding entries to your system's hosts file:
-      Example: ${Cyan}'127.0.0.1 $DEFAULT_SITE_ON_INIT'${Color_Off}
-      Example: ${Cyan}'127.0.0.1 site1.localhost'${Color_Off}
+${Green}Navigate to instance:${Color_Off} ${Cyan}cd ../$INSTANCE_NAME${Color_Off}
+${Green}Access container shell (to access bench):${Color_Off} ${Cyan}./fh.sh shell${Color_Off}
 ======================================================
 EOF
 )
