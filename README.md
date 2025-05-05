@@ -1,4 +1,5 @@
-# FrappeDev - Quick Frappe Docker Development Setup
+
+# Frappe Docker Development Setup
 
 *This script streamlines the process of setting up isolated Frappe framework development instances using Docker.*
 * __🤖 Disclaimer: This README, along with portions of the scripts and configuration files in this repository, were generated with AI__
@@ -13,12 +14,17 @@
 - [🐚 Working with the Container Shell](#-working-with-the-container-shell)
 - [⚙️ Using fh.sh](#️-using-fhsh)
 - [🌐 Accessing Your Frappe Instance](#-accessing-your-frappe-instance)
+- [🖥️ Frontend Development with Frappe](#️-frontend-development-with-frappe)
 - [📁 Directory Structure](#-directory-structure)
 - [💡 Advanced Topics](#-advanced-topics)
 
 ## 🚀 Overview
 
 FrappeDev provides a simplified approach to creating containerized Frappe development environments. It works seamlessly in both GitHub Codespaces and local development workflows, letting you get a clean, isolated Frappe environment running in minutes.
+
+**Quick Start Links:**
+- [Local Development Guide](#-start-guide-local-development)
+- [GitHub Codespaces Guide](#️-start-guide-github-codespaces)
 
 ## ✨ Features
 
@@ -63,6 +69,8 @@ FrappeDev provides a simplified approach to creating containerized Frappe develo
    ```bash
    ./create_frappe_instance.sh
    ```
+* Fill in the prompts for instance name and Frappe branch
+* Wait for the script to complete (this may take several minutes)
 
 4. **Navigate to Instance**
    ```bash
@@ -88,6 +96,8 @@ FrappeDev provides a simplified approach to creating containerized Frappe develo
    ```bash
    ./create_frappe_instance.sh
    ```
+* Fill in the prompts for instance name and Frappe branch
+* Wait for the script to complete (this may take several minutes)
 
 3. **Navigate to Your Instance**
    ```bash
@@ -142,12 +152,51 @@ The `fh.sh` script is included in each instance directory and provides all the t
 
 Run `./fh.sh` without arguments for the complete command list with descriptions.
 
+### Using the `clean` Tool
+
+The `clean` command stops and deletes containers and volumes, including MariaDB data:
+
+```bash
+./fh.sh clean
+```
+
+To completely remove the entire instance directory along with all data:
+
+```bash
+./fh.sh clean -d
+```
+
+**Warning:** Using the `-d` flag will delete everything in the instance directory and cannot be undone.
+
+## 🌐 Accessing Your Frappe Instance
+
 * **Default Site:** Access `http://localhost:8000`
 * **Custom Sites:**
   1. Add `127.0.0.1 mysite.localhost` to your hosts file
   2. Access `http://mysite.localhost:8000`
 
 Default login credentials: `Administrator` / `admin`
+
+## 🖥️ Frontend Development with Frappe in Docker
+
+- Port 8080 is already exposed in the Docker configuration.
+- Chokidar is included for hot reloads.
+
+When working with frontend frameworks in your custom app:
+
+1. Navigate to your frontend directory inside your custom app
+2. When using `yarn dev`, make sure to include the `--host` flag so it works outside the container:
+   ```bash
+   yarn dev --host
+   ```
+
+### Frontend Setup Tool (Doppio)
+
+To quickly set up frontend development in your Frappe app, check out [Doppio](https://github.com/NagariaHussain/doppio) - a helpful tool that streamlines setting up:
+- Vue.js or React.js frontends
+- Desk pages
+- TypeScript support
+- Frappe UI in Vue
 
 ## 📁 Directory Structure
 
