@@ -36,9 +36,14 @@ DEFAULT_SITE="dev.localhost"
 bench new-site "${DEFAULT_SITE}" \
   --mariadb-root-password "123" \
   --admin-password "admin" \
-  --no-mariadb-socket
+  --no-mariadb-socket \
+  --db-root-username root
 
+# --- Set Site Configurations for Development ---
+echo "Applying development configurations to site: ${DEFAULT_SITE}"
 bench --site "${DEFAULT_SITE}" set-config developer_mode 1
+bench --site "${DEFAULT_SITE}" set-config ignore_csrf 1
+bench --site "${DEFAULT_SITE}" set-config allow_cors '*'
 bench use "${DEFAULT_SITE}"
 
 echo "--- Frappe Initialization Complete ---"
