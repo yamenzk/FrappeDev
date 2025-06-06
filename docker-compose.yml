@@ -1,17 +1,18 @@
 # docker-compose.yml
 services:
   frappe:
-    build:
-      context: ./.devcontainer
-      args:
-        PYTHON_TAG: ${FRAPPE_PYTHON_TAG:-3.11}
+    build: ./.devcontainer
     container_name: ${COMPOSE_PROJECT_NAME}-frappe
+    command: sleep infinity
     environment:
-      - FRAPPE_BRANCH=${FRAPPE_BRANCH} 
-      - CHOKIDAR_USEPOLLING=true    
+      - FRAPPE_BRANCH=${FRAPPE_BRANCH}
+      - PYTHON_VERSION_FOR_BENCH=${PYTHON_VERSION_FOR_BENCH}
+      - CHOKIDAR_USEPOLLING=true
     volumes:
       - .:/workspace:cached
       - frappe-bench:/workspace/frappe-bench
+      # Mount host's SSH keys read-only for git access to private repos.
+      - ~/.ssh:/home/frappe/.ssh:ro
     working_dir: /workspace/frappe-bench
     ports:
       - "${SITE_PORT:-8000}:8000"
@@ -38,8 +39,6 @@ services:
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123"]
       interval: 10s
-      timeout: 5s
-      retries: 5
 
   redis-cache:
     image: redis:alpine

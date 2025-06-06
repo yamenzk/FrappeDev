@@ -1,28 +1,30 @@
 #!/bin/bash
 # fh - The Frappe Helper script
+set -e
 
-# --- Colors ---
 Color_Off='\033[0m'
 BGreen='\033[1;32m'
 BBlue='\033[1;34m'
 Yellow='\033[0;33m'
 Red='\033[1;31m'
 
-# Get the directory of the script to ensure it runs from the project root
 cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
-
-# Check for Docker Compose
-if ! command -v docker &> /dev/null || ! docker compose version &> /dev/null; then
-    echo -e "${Red}Error: 'docker' and 'docker compose' are required. Please install them.${Color_Off}"
-    exit 1
-fi
 
 COMMAND="$1"
 shift
 
 case "$COMMAND" in
+    setup)
+        echo -e "${BBlue}Running one-time setup...${Color_Off}"
+        echo -e "${Yellow}Step 1: Fixing bench folder permissions...${Color_Off}"
+        docker compose exec -u root frappe chown -R frappe:frappe /workspace/frappe-bench
+        echo -e "${BGreen}Permissions fixed.${Color_Off}"
+        echo -e "${Yellow}Step 2: Initializing Frappe bench (this will take a few minutes)...${Color_Off}"
+        docker compose exec frappe bash /workspace/scripts/init.sh
+        echo -e "${BGreen}Setup complete! You can now run './fh start' to begin development.${Color_Off}"
+        ;;
     start)
-        echo -e "${BBlue}Starting Frappe development server...${Color_Off}"
+        echo -e "${BBlue}Starting Frappe development server... (Ctrl+C to stop)${Color_Off}"
         docker compose exec frappe bench start
         ;;
     up)
@@ -41,47 +43,39 @@ case "$COMMAND" in
         echo -e "${BBlue}Opening a shell in the Frappe container...${Color_Off}"
         docker compose exec frappe bash
         ;;
-    root-shell)
-        echo -e "${BBlue}Opening a ROOT shell in the Frappe container...${Color_Off}"
-        docker compose exec -u root frappe bash
-        ;;
     clean)
-        echo -e "${Yellow}WARNING: This will stop containers and permanently delete all volumes (database, bench data).${Color_Off}"
-        read -p "Are you sure? (y/n): " -n 1 -r; echo
+        echo -e "${Red}WARNING: This will stop all containers AND permanently delete all associated data volumes (database, bench files).${Color_Off}"
+        read -p "Are you sure you want to proceed? (y/n): " -n 1 -r; echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "${BBlue}Cleaning instance...${Color_Off}"
             docker compose down -v
-            echo -e "${BGreen}Instance cleaned.${Color_Off}"
+            echo -e "${BGreen}Instance cleaned successfully.${Color_Off}"
         else
             echo "Operation cancelled."
         fi
         ;;
     "")
-        echo -e "${BBlue}Frappe Helper (fh) - V2${Color_Off}"
-        echo "A simple wrapper for common development tasks."
+        echo -e "${BBlue}Frappe Launchpad Helper (fh)${Color_Off}"
+        echo "Usage: ./fh <command> [args...]"
         echo
-        echo "Usage: fh <command> [args...]"
+        echo -e "${BGreen}First-Time Setup:${Color_Off}"
+        echo "  setup        - Runs the complete one-time initialization for a new instance."
         echo
         echo -e "${BGreen}Service Management:${Color_Off}"
-        echo "  up           - Start all services in detached mode (docker compose up -d)"
-        echo "  down         - Stop all services (add -v to remove volumes)"
-        echo "  logs [svc]   - View logs for all services or a specific one"
-        echo "  clean        - Stop containers and delete all data volumes"
+        echo "  up           - Start all services in detached mode."
+        echo "  down         - Stop all services."
+        echo "  logs [svc]   - View logs for all services or a specific one."
+        echo "  clean        - ${Red}PERMANENTLY a${Color_Off}ll containers and data volumes."
         echo
         echo -e "${BGreen}Development:${Color_Off}"
-        echo "  start        - Start the 'bench start' development server (interactive)"
-        echo "  shell        - Open a shell inside the frappe container"
-        echo "  root-shell   - Open a root shell inside the frappe container"
+        echo "  start        - Start the 'bench start' development server."
+        echo "  shell        - Open a shell inside the frappe container."
         echo
         echo -e "${BGreen}Bench Passthrough:${Color_Off}"
         echo "  <any>        - Any other command is passed directly to 'bench'."
-        echo "                 Examples:"
-        echo "                 - fh migrate"
-        echo "                 - fh --site dev.localhost install-app erpnext"
-        echo "                 - fh get-app https://github.com/frappe/erpnext"
-        echo "                 - fh update --reset"
+        echo "                 e.g., ./fh migrate, ./fh get-app <url>, ./fh update"
         ;;
     *)
-        # Default case: Pass any other command directly to 'bench'
         echo -e "${BBlue}Running: bench ${COMMAND} $@${Color_Off}"
         docker compose exec frappe bench "$COMMAND" "$@"
         ;;
