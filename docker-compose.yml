@@ -6,14 +6,13 @@ services:
     build:
       context: ./.devcontainer
       args:
-        PYTHON_VERSION: ${FRAPPE_PYTHON_VERSION:-3.11}
+        PYTHON_TAG: ${FRAPPE_PYTHON_TAG:-3.11}
     container_name: ${COMPOSE_PROJECT_NAME}-frappe
     environment:
-      - FRAPPE_BRANCH=${FRAPPE_BRANCH}
-      - CHOKIDAR_USEPOLLING=true
+      - FRAPPE_BRANCH=${FRAPPE_BRANCH} 
+      - CHOKIDAR_USEPOLLING=true    
     volumes:
       - .:/workspace:cached
-      - nvm-data:/home/frappe/.nvm
       - frappe-bench:/workspace/frappe-bench
     working_dir: /workspace/frappe-bench
     ports:
@@ -66,5 +65,4 @@ services:
 
 volumes:
   mariadb-data:
-  nvm-data:
   frappe-bench:

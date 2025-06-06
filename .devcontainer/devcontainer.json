@@ -1,47 +1,28 @@
 // .devcontainer/devcontainer.json
 {
-  "name": "Frappe Dev Instance",
-
-  // Use docker-compose to orchestrate our services.
+  "name": "Frappe Launchpad",
   "dockerComposeFile": ["../docker-compose.yml"],
-
-  // The service to run the dev container in.
-  // This is the service VS Code will attach its terminal and tools to.
   "service": "frappe",
-
-  // The workspace folder inside the container.
   "workspaceFolder": "/workspace",
-
-  // Forward all the ports defined in docker-compose.yml.
   "forwardPorts": [
     "${SITE_PORT:-8000}",
     "${SOCKETIO_PORT:-9000}",
-    "${MARIADB_PORT:-3307}",
-    "${REDIS_CACHE_PORT:-13000}",
-    "${REDIS_QUEUE_PORT:-11000}",
-    "${REDIS_SOCKETIO_PORT:-12000}"
+    "${MARIADB_PORT:-3307}"
   ],
 
-  // Run the init script AFTER the container is created but BEFORE VS Code attaches.
-  // We use `onCreateCommand` because it runs only once.
   "onCreateCommand": "bash /workspace/scripts/init.sh",
-
-  // Set the remote user.
   "remoteUser": "frappe",
-
-  // Customize VS Code settings and extensions.
   "customizations": {
     "vscode": {
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
         "python.defaultInterpreterPath": "/usr/bin/python3",
-        "files.eol": "\n" // Avoid CRLF issues
+        "files.eol": "\n"
       },
       "extensions": [
         "ms-azuretools.vscode-docker",
         "ms-python.python",
-        "visualstudioexptteam.vscodeintellicode",
-        "esbenp.prettier-vscode"
+        "visualstudioexptteam.vscodeintellicode"
       ]
     }
   }
