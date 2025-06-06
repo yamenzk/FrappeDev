@@ -26,7 +26,6 @@ fi
 echo -e "${BGreen}✓ Docker and Docker Compose found.${Color_Off}"
 
 # --- Gather User Input ---
-# 1. Project Name
 while true; do
   read -p "Enter a name for your project (e.g., my-frappe-app): " PROJECT_NAME
   if [[ -n "$PROJECT_NAME" && "$PROJECT_NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
@@ -36,55 +35,41 @@ while true; do
   fi
 done
 
-# 2. Frappe Branch
 echo -e "\n${BYellow}Please choose a Frappe branch to install:${Color_Off}"
 branches=("version-15" "develop" "version-14" "Quit")
 PS3="Select a branch (enter a number): "
 select branch in "${branches[@]}"; do
     case $branch in
         "version-15")
-            FRAPPE_BRANCH="version-15"
-            PYTHON_VERSION_FOR_BENCH="python3.11"
-            break
-            ;;
+            FRAPPE_BRANCH="version-15"; PYTHON_VERSION_FOR_BENCH="python3.11"; break ;;
         "develop")
-            FRAPPE_BRANCH="develop"
-            PYTHON_VERSION_FOR_BENCH="python3.11"
-            break
-            ;;
+            FRAPPE_BRANCH="develop"; PYTHON_VERSION_FOR_BENCH="python3.11"; break ;;
         "version-14")
-            FRAPPE_BRANCH="version-14"
-            PYTHON_VERSION_FOR_BENCH="python3.10"
-            break
-            ;;
+            FRAPPE_BRANCH="version-14"; PYTHON_VERSION_FOR_BENCH="python3.10"; break ;;
         "Quit")
-            echo "Installation cancelled."
-            exit 0
-            ;;
+            echo "Installation cancelled."; exit 0 ;;
         *) echo "Invalid option $REPLY";;
     esac
 done
 
-# 3. Site Port
 read -p "Enter the main site port [default: 8000]: " SITE_PORT
 SITE_PORT=${SITE_PORT:-8000}
 
 echo
 echo -e "${BGreen}--- Configuration Summary ---${Color_Off}"
-echo "Project Name:             ${BYellow}${PROJECT_NAME}${Color_Off}"
-echo "Frappe Branch:            ${BYellow}${FRAPPE_BRANCH}${Color_Off}"
-echo "Python Version for Bench: ${BYellow}${PYTHON_VERSION_FOR_BENCH}${Color_Off}"
-echo "Site will be on port:     ${BYellow}${SITE_PORT}${Color_Off}"
+# FIX: Added -e flag to the following echo commands
+echo -e "Project Name:             ${BYellow}${PROJECT_NAME}${Color_Off}"
+echo -e "Frappe Branch:            ${BYellow}${FRAPPE_BRANCH}${Color_Off}"
+echo -e "Python Version for Bench: ${BYellow}${PYTHON_VERSION_FOR_BENCH}${Color_Off}"
+echo -e "Site will be on port:     ${BYellow}${SITE_PORT}${Color_Off}"
 echo
 
 read -p "Is this correct? (y/n): " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Installation cancelled."
-    exit 1
+    echo "Installation cancelled."; exit 1
 fi
 
-# --- Create .env file ---
 echo -e "\n${BBlue}Creating .env file...${Color_Off}"
 cat > .env <<EOF
 # --- Main Instance Configuration ---
@@ -104,25 +89,17 @@ REDIS_SOCKETIO_PORT=$((SITE_PORT + 4000))
 EOF
 echo -e "${BGreen}✓ .env file created successfully.${Color_Off}"
 
-# --- Setup Process ---
 echo -e "\n${BBlue}Setting up the instance. This will take several minutes...${Color_Off}"
-
-# 1. Set permissions for helper script
 echo "Step 1: Setting executable permissions for helper script..."
 chmod +x fh
 echo -e "${BGreen}✓ Permissions set for ./fh.${Color_Off}"
-
-# 2. Start services
 echo "Step 2: Building images and starting Docker containers..."
 docker compose up -d --build
 echo -e "${BGreen}✓ Docker containers are up and running.${Color_Off}"
-
-# 3. Run one-time setup using the fh script
 echo "Step 3: Running initial bench setup..."
 ./fh setup
 echo
 
-# --- Success Message ---
 echo -e "${BGreen}=======================================${Color_Off}"
 echo -e "${BGreen}🎉 Installation Complete! 🎉${Color_Off}"
 echo -e "${BGreen}=======================================${Color_Off}"

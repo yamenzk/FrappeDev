@@ -17,6 +17,7 @@ cd /workspace
 
 bench init \
   --ignore-exist \
+  --skip-redis-config-generation \
   --python "${PYTHON_VERSION_FOR_BENCH}" \
   --frappe-path https://github.com/frappe/frappe \
   --frappe-branch "${FRAPPE_BRANCH}" \
