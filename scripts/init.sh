@@ -16,6 +16,7 @@ echo "Python Version: ${PYTHON_VERSION_FOR_BENCH}"
 cd /workspace
 
 bench init \
+  --ignore-exist \
   --python "${PYTHON_VERSION_FOR_BENCH}" \
   --frappe-path https://github.com/frappe/frappe \
   --frappe-branch "${FRAPPE_BRANCH}" \
