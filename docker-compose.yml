@@ -1,0 +1,64 @@
+# docker-compose.yml
+services:
+  frappe:
+    build: ./.devcontainer
+    container_name: ${COMPOSE_PROJECT_NAME}-frappe
+    command: sleep infinity
+    environment:
+      - FRAPPE_BRANCH=${FRAPPE_BRANCH}
+      - PYTHON_VERSION_FOR_BENCH=${PYTHON_VERSION_FOR_BENCH}
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - .:/workspace:cached
+      - frappe-bench:/workspace/frappe-bench
+      - ~/.ssh:/home/frappe/.ssh:ro
+    working_dir: /workspace/frappe-bench
+    ports:
+      - "${SITE_PORT}:${SITE_PORT}"
+      - "${SOCKETIO_PORT}:${SOCKETIO_PORT}"
+    depends_on:
+      mariadb: { condition: service_healthy }
+      redis-cache: { condition: service_healthy }
+      redis-queue: { condition: service_healthy }
+      redis-socketio: { condition: service_healthy }
+
+  mariadb:
+    image: mariadb:10.6
+    container_name: ${COMPOSE_PROJECT_NAME}-mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_ROOT_HOST: '%'
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    ports:
+      - "${MARIADB_PORT}:${MARIADB_PORT}"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123"]
+      interval: 10s
+
+  redis-cache:
+    image: redis:alpine
+    container_name: ${COMPOSE_PROJECT_NAME}-redis-cache
+    ports: ["${REDIS_CACHE_PORT}:${REDIS_CACHE_PORT}"]
+    healthcheck: &redis-healthcheck
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+
+  redis-queue:
+    image: redis:alpine
+    container_name: ${COMPOSE_PROJECT_NAME}-redis-queue
+    ports: ["${REDIS_QUEUE_PORT}:${REDIS_QUEUE_PORT}"]
+    healthcheck: *redis-healthcheck
+
+  redis-socketio:
+    image: redis:alpine
+    container_name: ${COMPOSE_PROJECT_NAME}-redis-socketio
+    ports: ["${REDIS_SOCKETIO_PORT}:${REDIS_SOCKETIO_PORT}"]
+    healthcheck: *redis-healthcheck
+
+volumes:
+  mariadb-data:
+  frappe-bench:

@@ -1,16 +1,21 @@
-// .devcontainer/devcontainer.json
 {
-  "name": "Frappe Dev Instance Codespace",
-  "image": "mcr.microsoft.com/vscode/devcontainers/universal:linux",
-
+  "name": "Frappe Dev",
+  "dockerComposeFile": ["../docker-compose.yml"],
+  "service": "frappe",
+  "workspaceFolder": "/workspace",
   "forwardPorts": [
-      8000, 9000, 3307, 13000, 11000, 12000
-    ],
-
+    "${localEnv:SITE_PORT:-8000}",
+    "${localEnv:SOCKETIO_PORT:-9000}",
+    "${localEnv:MARIADB_PORT:-8001}"
+  ],
+  "onCreateCommand": "./fh setup",
+  "remoteUser": "frappe",
   "customizations": {
     "vscode": {
       "settings": {
-        "terminal.integrated.shell.linux": "/bin/bash"
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "python.defaultInterpreterPath": "/usr/bin/python3",
+        "files.eol": "\n"
       },
       "extensions": [
         "ms-azuretools.vscode-docker",
@@ -18,7 +23,5 @@
         "visualstudioexptteam.vscodeintellicode"
       ]
     }
-  },
-  "postCreateCommand": "chmod +x ./create_frappe_instance.sh",
-  "remoteUser": "codespace"
+  }
 }
