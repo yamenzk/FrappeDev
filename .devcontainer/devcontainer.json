@@ -1,12 +1,12 @@
 {
-  "name": "Frappe Launchpad",
+  "name": "Frappe Dev",
   "dockerComposeFile": ["../docker-compose.yml"],
   "service": "frappe",
   "workspaceFolder": "/workspace",
   "forwardPorts": [
-    "${SITE_PORT:-8000}",
-    "${SOCKETIO_PORT:-9000}",
-    "${MARIADB_PORT:-3307}"
+    "${localEnv:SITE_PORT:-8000}",
+    "${localEnv:SOCKETIO_PORT:-9000}",
+    "${localEnv:MARIADB_PORT:-8001}"
   ],
   "onCreateCommand": "./fh setup",
   "remoteUser": "frappe",

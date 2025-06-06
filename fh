@@ -65,7 +65,7 @@ case "$COMMAND" in
         echo "  up           - Start all services in detached mode."
         echo "  down         - Stop all services."
         echo "  logs [svc]   - View logs for all services or a specific one."
-        echo "  clean        - ${Red}PERMANENTLY a${Color_Off}ll containers and data volumes."
+        echo "  clean        - ${Red}PERMANENTLY removes${Color_Off} all containers and data volumes."
         echo
         echo -e "${BGreen}Development:${Color_Off}"
         echo "  start        - Start the 'bench start' development server."

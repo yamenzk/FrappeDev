@@ -4,7 +4,7 @@
 /frappe-bench/
 
 # Ignore local environment file changes
-.env.local
+.env
 
 # VS Code
 .vscode/

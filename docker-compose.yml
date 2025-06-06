@@ -11,12 +11,11 @@ services:
     volumes:
       - .:/workspace:cached
       - frappe-bench:/workspace/frappe-bench
-      # Mount host's SSH keys read-only for git access to private repos.
       - ~/.ssh:/home/frappe/.ssh:ro
     working_dir: /workspace/frappe-bench
     ports:
-      - "${SITE_PORT:-8000}:8000"
-      - "${SOCKETIO_PORT:-9000}:9000"
+      - "${SITE_PORT}:${SITE_PORT}"
+      - "${SOCKETIO_PORT}:${SOCKETIO_PORT}"
     depends_on:
       mariadb: { condition: service_healthy }
       redis-cache: { condition: service_healthy }
@@ -35,7 +34,7 @@ services:
     volumes:
       - mariadb-data:/var/lib/mysql
     ports:
-      - "${MARIADB_PORT:-3307}:3306"
+      - "${MARIADB_PORT}:${MARIADB_PORT}"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123"]
       interval: 10s
@@ -43,7 +42,7 @@ services:
   redis-cache:
     image: redis:alpine
     container_name: ${COMPOSE_PROJECT_NAME}-redis-cache
-    ports: ["${REDIS_CACHE_PORT:-13000}:6379"]
+    ports: ["${REDIS_CACHE_PORT}:${REDIS_CACHE_PORT}"]
     healthcheck: &redis-healthcheck
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -51,13 +50,13 @@ services:
   redis-queue:
     image: redis:alpine
     container_name: ${COMPOSE_PROJECT_NAME}-redis-queue
-    ports: ["${REDIS_QUEUE_PORT:-11000}:6379"]
+    ports: ["${REDIS_QUEUE_PORT}:${REDIS_QUEUE_PORT}"]
     healthcheck: *redis-healthcheck
 
   redis-socketio:
     image: redis:alpine
     container_name: ${COMPOSE_PROJECT_NAME}-redis-socketio
-    ports: ["${REDIS_SOCKETIO_PORT:-12000}:6379"]
+    ports: ["${REDIS_SOCKETIO_PORT}:${REDIS_SOCKETIO_PORT}"]
     healthcheck: *redis-healthcheck
 
 volumes:
